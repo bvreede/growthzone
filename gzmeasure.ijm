@@ -23,8 +23,10 @@ run("Clear Results");
 //measure:
 //loop 3x
 for (b=0; b<3; b++) {
+	if (number>0) {
 	query = "1: Draw a line from the tip of the growthzone to the first stripe:";
 	measure_length();
+	}
 	query = "2: Draw a line measuring the width of the growthzone at its widest part:";
 	measure_length();
 	if (number>0) {
@@ -60,7 +62,7 @@ for (b=0; b<3; b++) {
 	measure_area();
 	}
 	if (number>2) {
-	query = "9: Draw the area of the growthzone up to the third stripe:";
+	query = "10: Draw the area of the growthzone up to the third stripe:";
 	measure_area();
 	}
 	
@@ -79,7 +81,7 @@ close();
 //functions: measure length and measure area
 //no loop
 function measure_length() {
-	setTool("polyline");
+	setTool("line");
 	waitForUser(query);
 	run("Measure");
 	updateResults;
