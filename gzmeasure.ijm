@@ -7,6 +7,7 @@ Dialog.addNumber("How many segments are visible?", 3);
 Dialog.show(); //get input from user: number of segments
 number = Dialog.getNumber();
 dir = getDirectory("home") + "Desktop/temp/";
+imgdir = getDirectory("home") + "Desktop/GZ_Tzach_Pictures/for_measurements/";
 name = getTitle();
 print("\\Clear") //clears log window
 print("img_title " + name);
@@ -58,20 +59,20 @@ for (b=0; b<3; b++) {
 	measure_area();
 	}
 	if (number>1) {
-	query = "9: Draw the area of the growthzone up to the second stripe:";
+	query = "9: Draw the area of the growthzone between the first and second stripe:";
 	measure_area();
 	}
 	if (number>2) {
-	query = "10: Draw the area of the growthzone up to the third stripe:";
+	query = "10: Draw the area of the growthzone between the second and third stripe:";
 	measure_area();
 	}
-	
+
 	saveAs("Measurements", "" + dir + "/" + name + b+1 + "_area.txt");
 	run("Clear Results");
 
 selectImage(name);
 close();
-open(name);
+open(imgdir + name);
 }
 
 //final: close image
