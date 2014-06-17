@@ -23,19 +23,20 @@ filelist = list(fileset)
 
 '''
 check that all files in the filelist are indeed
-complete. If any item (1-3, len, area, meta) is
+complete. If any measurement of length is
 missing, the image name will be deleted from the
 list of images for further processing.
+NOTE! Area measurements are NOT checked (if there are
+0 segments, there will not be area measurements).
 '''
 removelist = []
 for img in filelist:
-	for i in range(1,3):
-		for tp in ("len","area"):
-			if os.path.exists("%s%s%s.%s%s_%s.txt" %(folder,msfile,img,jpgdict[img],i,tp)):
-				continue
-			else:
-				print "not all", tp, "measurements completed for", img
-				removelist.append(img)
+	for i in range(1,4):
+		if os.path.exists("%s%s%s.%s%s_len.txt" %(folder,msfile,img,jpgdict[img],i)):
+			continue
+		else:
+			print "not all measurements completed for", img
+			removelist.append(img)
 	if os.path.exists("%s%s%s.JPG_meta.txt" %(folder,msfile,img)):
 		continue
 	else:
@@ -43,19 +44,58 @@ for img in filelist:
 		removelist.append(img)
 removeset = set(removelist) # removes duplicates
 for rem in removeset:
-	filelist.remove(rem)
+	filelist.remove(rem) # chuck all items that have incomplete measurements
 
 '''
 read individual files to produce one output file
 with all measurements as well as averages.
 '''
-outputdb.write("filename,devt_time,segments,measurement,l1,l2,l3,l4,b1,b2,b3,a1,a2,a3\n")
+outputdb.write("filename,devt_time,segments,repeat,w1,w2,w3,w4,l5,l6,l7,l8,a1,a2,a3\n")
 for img in filelist:
-	metafile = "%s%s%s.%s_meta.txt" %(folder,msfile,img,jpgdict[img])
-	meta = open(metafile)
-	for i in range(1,3):	# for each measurement (1-3):
-		outputdb.write("%s.jpg,%s," %(img,img[:5],))# collect image filename
-	# collect developmental time
-	# collect segment number
-	# collect length + width data (depending on # segments)
-	# collect area data
+	metafile = open("%s%s%s.%s_meta.txt" %(folder,msfile,img,jpgdict[img]))
+	meta = metafile.readlines()
+	segm = int(meta[1].strip().split()[1]) # takes 2nd line, 2nd element of meta file: segment number
+	for i in range(1,4): # for each measurement (1-3):
+		#opening result files...
+		lenfile = open("%s%s%s.%s%s_len.txt" %(folder,msfile,img,jpgdict[img],i))
+		length = lenfile.readlines()
+		if os.path.exists("%s%s%s.%s%s_area.txt" %(folder,msfile,img,jpgdict[img],i)): #areafile does not always exist(eg 0 segments)
+			areafile = open("%s%s%s.%s%s_area.txt" %(folder,msfile,img,jpgdict[img],i))
+			area = areafile.readlines()
+		else:
+			if segm != 0: # this means an area file is missing, but not for a good reason!
+				print "not all area measurements done for", img
+				break
+		outputdb.write("%s.%s,%s,%s,%s," %(img,jpgdict[img],img[:5],segm,i))# collect image filename to measurement number
+		w1 = float(length[1].split()[8]) #8th item depends on formatting imagej! pay attention!
+		if segm == 0:
+			w2=w3=w4=l5=l7=l8=a1=a2=a3=""
+			l6 = float(length[2].split()[8])
+		elif segm == 1:
+			w3=w4=l7=l8=a2=a3=""
+			w2=float(length[2].split()[8])
+			l5=float(length[3].split()[8])
+			l6=float(length[4].split()[8])
+			a1=float(area[1].split()[2])
+		elif segm == 2:
+			w4=l8=a3=""
+			w2=float(length[2].split()[8])
+			w3=float(length[3].split()[8])
+			l5=float(length[4].split()[8])
+			l6=float(length[5].split()[8])
+			l7=float(length[6].split()[8])
+			a1=float(area[1].split()[2])
+			a2=float(area[2].split()[2])
+		else:
+			w2=float(length[2].split()[8])
+			w3=float(length[3].split()[8])
+			w4=float(length[4].split()[8])
+			l5=float(length[5].split()[8])
+			l6=float(length[6].split()[8])
+			l7=float(length[7].split()[8])
+			l8=float(length[8].split()[8])
+			a1=float(area[1].split()[2])
+			a2=float(area[2].split()[2])
+			a3=float(area[3].split()[2])
+		outputdb.write("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" %(w1,w2,w3,w4,l5,l6,l7,l8,a1,a2,a3))
+	#collect averages: how about a list and then averaging its items?
