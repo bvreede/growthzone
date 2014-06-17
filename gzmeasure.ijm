@@ -41,9 +41,9 @@ for (b=0; b<3; b++) {
 	if (number>0) {
 	query = "5: Draw a line from the tip of the growthzone to the first stripe:";
 	measure_length();
-	query = "6: Draw a line from the tip of the growthzone to the intersection of (1) and (5):";
-	measure_length();
 	}
+	query = "6: Draw a line from the tip of the growthzone to the middle of (1), the cross section of the growth zone:";
+	measure_length();
 	if (number>1) {
 	query = "7: Draw a line between the first and second stripe:";
 	measure_length();
