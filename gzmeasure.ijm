@@ -24,46 +24,48 @@ run("Clear Results");
 //measure:
 //loop 3x
 for (b=0; b<3; b++) {
-	if (number>0) {
-	query = "1: Draw a line from the tip of the growthzone to the first stripe:";
-	measure_length();
-	}
-	query = "2: Draw a line measuring the width of the growthzone at its widest part:";
+	query = "1: Draw a line measuring the width of the growthzone at its widest part:";
 	measure_length();
 	if (number>0) {
-	query = "3: Draw a line along the first stripe:";
+	query = "2: Draw a line along the first stripe:";
 	measure_length();
 	}
 	if (number>1) {
-	query = "4: Draw a line along the second stripe:";
+	query = "3: Draw a line along the second stripe:";
 	measure_length();
 	}
 	if (number>2) {
-	query = "5: Draw a line along the third stripe:";
+	query = "4: Draw a line along the third stripe:";
+	measure_length();
+	}
+	if (number>0) {
+	query = "5: Draw a line from the tip of the growthzone to the first stripe:";
+	measure_length();
+	query = "6: Draw a line from the tip of the growthzone to the intersection of (1) and (5):";
 	measure_length();
 	}
 	if (number>1) {
-	query = "6: Draw a line between the first and second stripe:";
+	query = "7: Draw a line between the first and second stripe:";
 	measure_length();
 	}
 	if (number>2) {
-	query = "7: Draw a line between the second and third stripe:";
+	query = "8 Draw a line between the second and third stripe:";
 	measure_length();
-	}
-
+	}		
+	
 	saveAs("Measurements", "" + dir + "/" + name + b+1 + "_len.txt");
 	run("Clear Results");
 
 	if (number>0) {
-	query = "8: Draw the area of the growthzone up to the first stripe:";
+	query = "9: Draw the area of the growthzone up to the first stripe:";
 	measure_area();
 	}
 	if (number>1) {
-	query = "9: Draw the area of the growthzone between the first and second stripe:";
+	query = "10: Draw the area of the growthzone between the first and second stripe:";
 	measure_area();
 	}
 	if (number>2) {
-	query = "10: Draw the area of the growthzone between the second and third stripe:";
+	query = "11: Draw the area of the growthzone between the second and third stripe:";
 	measure_area();
 	}
 
@@ -97,3 +99,33 @@ function measure_area() {
 	updateResults;
 	run("Draw");
 }
+
+
+
+
+	if (number>0) {
+	query = "1: Draw a line from the tip of the growthzone to the first stripe:";
+	measure_length();
+	}
+	query = "2: Draw a line measuring the width of the growthzone at its widest part:";
+	measure_length();
+	if (number>0) {
+	query = "3: Draw a line along the first stripe:";
+	measure_length();
+	}
+	if (number>1) {
+	query = "4: Draw a line along the second stripe:";
+	measure_length();
+	}
+	if (number>2) {
+	query = "5: Draw a line along the third stripe:";
+	measure_length();
+	}
+	if (number>1) {
+	query = "6: Draw a line between the first and second stripe:";
+	measure_length();
+	}
+	if (number>2) {
+	query = "7: Draw a line between the second and third stripe:";
+	measure_length();
+	}
