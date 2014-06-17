@@ -99,33 +99,3 @@ function measure_area() {
 	updateResults;
 	run("Draw");
 }
-
-
-
-
-	if (number>0) {
-	query = "1: Draw a line from the tip of the growthzone to the first stripe:";
-	measure_length();
-	}
-	query = "2: Draw a line measuring the width of the growthzone at its widest part:";
-	measure_length();
-	if (number>0) {
-	query = "3: Draw a line along the first stripe:";
-	measure_length();
-	}
-	if (number>1) {
-	query = "4: Draw a line along the second stripe:";
-	measure_length();
-	}
-	if (number>2) {
-	query = "5: Draw a line along the third stripe:";
-	measure_length();
-	}
-	if (number>1) {
-	query = "6: Draw a line between the first and second stripe:";
-	measure_length();
-	}
-	if (number>2) {
-	query = "7: Draw a line between the second and third stripe:";
-	measure_length();
-	}
