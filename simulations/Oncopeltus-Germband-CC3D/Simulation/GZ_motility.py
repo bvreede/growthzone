@@ -17,6 +17,7 @@ global trackMotility; global motilityTrack_t0; global motilityTrack_dt
 global motilityFilename
 # Length tracking
 global trackLength; global lengthTrack_dt; global lengthFilename
+global track_GZ_aspect_ratio; global ratioTrack_dt; global ratioFilename
 
 ## Initialization parameters
 global pifName
@@ -65,18 +66,20 @@ global T;
 global nOrder
 
 ## Cell-field initialization parameters
-pifName="InitializationPiffs/GrowthZoneGenesis_01_09_2014_for_paper_v03.piff"  #"InitializationPiffs/Initial16-7.piff"
+pifName="InitializationPiffs/GrowthZoneGenesis_06_24_2014_Oncopeltus_MCS_4200.piff" # for Oncopeltus
+# pifName="InitializationPiffs/GrowthZoneGenesis_01_09_2014_for_paper_v03.piff"  # for Tribolium
 
 ## Visualization parameters
 Time=time.localtime()
 Year=str(Time[0]); Month=str(Time[1]); Day=str(Time[2]); Hour=str(Time[3])
 Minute=str(Time[4]); Second=str(Time[5])
-folder="C:/CompuCell3D/Simulations/GZ_Motility_Force_July2013/OutputFiles/"
+folder="C:/CompuCell3D/Simulations/GZ_Motility_Force_July2013_PaperParameters/OutputFiles/"
 timeTag=Month+"_"+Day+"_"+Year+"_"+Hour+"_"+Minute+"_"+Second
 
 ## Tracking flags
 trackLength = 0   ## set to nonzero to output a file with simulated germ band length vs MCS
 trackMotility = 0  ## set to nonzero to output a file with a "snapshot" of cells' motility at a given MCS
+track_GZ_aspect_ratio = 1  ## set to nonzero to output a file with simulated GZ length/width vs MCS
 
 ##Motility tracking
 if trackMotility:
@@ -86,8 +89,12 @@ if trackMotility:
    motilityFilename=folder+"MotilityTracker_"+timeTag+".csv"
 ## Length tracking
 if trackLength:
-   lengthTrack_dt = 500
+   lengthTrack_dt = 200
    lengthFilename=folder+"LengthTracker_"+timeTag+".csv"
+## GZ aspect ratio tracking
+if track_GZ_aspect_ratio:
+   ratioTrack_dt = 200
+   ratioFilename=folder+"GZ_AspectRatio_Tracker_"+timeTag+".csv"
 
 ## Cell size parameters
 d = 10             # cell's side?
@@ -95,8 +102,8 @@ target_V = d**2      # Cell's target value -- its typical volume
 target_S = int(4*d)  # Cell's target circumference -- its typical circumference
 
 ## Initial segment size parameters
-Lx =  15*d #25*d
-Ly =  10*d #10*d
+Lx =  19*d # for Oncopeltus #15*d # for Tribolium
+Ly =  9*d # for Oncopeltus #10*d # for Tribolium
 N_seg = 2
 
 ## Growth-zone size parameters
@@ -136,9 +143,15 @@ divOrientation="Random"
 # divOrientation="VectorBased"
 
 ## Simulation dimensions
+# For Tribolium:
+# x_margin = 30*d
+# y_top_margin = 30*d
+# y_bottom_margin = 45*d
+
+# For Oncopeltus:
 x_margin = 30*d
-y_top_margin = 30*d
-y_bottom_margin = 45*d
+y_top_margin = 9*Ly
+y_bottom_margin = 3*Ly
 
 Dx = Lx+2*x_margin
 Dy = N_seg*Ly+GZ_flag*GZ_y+y_top_margin+y_bottom_margin
@@ -263,9 +276,9 @@ from GZ_motility_steppables import InitVolSur
 initVolSur=InitVolSur(_simulator=sim,_frequency=1,_LamV=lambda_V,_LamS=lambda_S,_tV=target_V,_tS=target_S)
 steppableRegistry.registerSteppable(initVolSur)
 
-from GZ_motility_steppables import CellCounts
-cellCounts=CellCounts(_simulator=sim,_frequency=100)
-steppableRegistry.registerSteppable(cellCounts)
+# from GZ_motility_steppables import CellCounts
+# cellCounts=CellCounts(_simulator=sim,_frequency=100)
+# steppableRegistry.registerSteppable(cellCounts)
 
 # from GZ_genesis_steppables import CellGrowth
 # cellGrowth=CellGrowth(_simulator=sim,_frequency=1,_tV=target_V,_tS=target_S,_T_double=T_double,_range_phase=range_phase)
@@ -319,9 +332,14 @@ if GradedMotility_flag:
 ##   from GZ_motility_steppables import MotilityTracker
 ##   motilityTrack=MotilityTracker(_simulator=sim,_frequency=1,_t0=motilityTrack_t0,_dt=motilityTrack_dt,_filename=motilityFilename)
 ##   steppableRegistry.registerSteppable(motilityTrack)  
-##if trackLength:
-##   from GZ_motility_steppables import LengthTracker
-##   lengthTrack=LengthTracker(_simulator=sim,_frequency=lengthTrack_dt,_filename=lengthFilename)
-##   steppableRegistry.registerSteppable(lengthTrack)
-   
+if trackLength:
+  from GZ_motility_steppables import LengthTracker
+  lengthTrack=LengthTracker(_simulator=sim,_frequency=lengthTrack_dt,_filename=lengthFilename)
+  steppableRegistry.registerSteppable(lengthTrack)
+if track_GZ_aspect_ratio:
+  from GZ_motility_steppables import GZ_AspectRatioTracker
+  ratioTrack=GZ_AspectRatioTracker(_simulator=sim,_frequency=ratioTrack_dt,_filename=ratioFilename)
+  steppableRegistry.registerSteppable(ratioTrack)
+
+  
 CompuCellSetup.mainLoop(sim,simthread,steppableRegistry)
