@@ -81,7 +81,7 @@ def configureSimulation(sim):
    connectivity.ElementCC3D("Penalty",{},10000)
    
 #########Set volume constraints uniformly for all cells in the simulation
-   volume=cc3d.ElementCC3D("Plugin",{"Name":"Volume"})
+   # volume=cc3d.ElementCC3D("Plugin",{"Name":"Volume"})
    # volume.ElementCC3D("TargetVolume",{},targetVolume)
    # volume.ElementCC3D("LambdaVolume",{},lambdaVolume)
    
@@ -125,5 +125,9 @@ stepperRegistry=CompuCellSetup.getStepperRegistry(sim)
 from Intro_Steppables import VolumeSurfaceExample
 volSurEx=VolumeSurfaceExample(_simulator=sim,_frequency=10,_LamV=lambdaVolume,_LamS=lambdaSurface,_tV=targetVolume,_tS=targetSurface,_extremeSmall=10,_extremeBig=500)
 steppableRegistry.registerSteppable(volSurEx)
+
+from Intro_Steppables import TestOutput
+testOutput=TestOutput(_simulator=sim,_frequency=100)
+steppableRegistry.registerSteppable(testOutput)
 
 CompuCellSetup.mainLoop(sim,simthread,steppableRegistry)
