@@ -98,7 +98,18 @@ for step in steps: steppableRegistry.registerSteppable(step)
 
 if speed_up_sim == False: # Disable the superfluous code for runs where time is of the essense
     SV = SarrazinVisualizer(sim, _frequency = 1)
-    steppableRegistry.registerSteppable(SV)
+    
+    from RewrittenSarrazinSteppables import SarrazinCloneVisualizer
+    SCV = SarrazinCloneVisualizer(sim, _frequency = 1, _cell_locs =  [jeremyVector(_x = 160, _y = 275),
+                                                  jeremyVector(_x = 120, _y = 250),
+                                                  jeremyVector(_x = 113, _y = 240),
+                                                  jeremyVector(_x = 106, _y = 210),
+                                                  jeremyVector(_x = 210, _y = 250),
+                                                  jeremyVector(_x = 207, _y = 240),
+                                                  jeremyVector(_x = 214, _y = 210)])
+                                                  
+    super_steppables = [SV, SCV]
+    for steppable in super_steppables: steppableRegistry.registerSteppable(steppable)                                                 
 
 CompuCellSetup.mainLoop(sim,simthread,steppableRegistry)
         

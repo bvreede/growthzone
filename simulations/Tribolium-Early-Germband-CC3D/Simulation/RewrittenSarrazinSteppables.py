@@ -187,3 +187,26 @@ class SarrazinVisualizer(SteppableBasePy):
         self.vectorCLField.clear()
         for cell in self.cellList:
             self.vectorCLField[cell] = [cell.lambdaVecX * -1, cell.lambdaVecY * -1, 0]
+            
+class SarrazinCloneVisualizer(SteppableBasePy):
+    def __init__(self,_simulator,_frequency, _cell_locs):
+        SteppableBasePy.__init__(self,_simulator,_frequency)
+        self.cellLocs = _cell_locs
+        self.sarraCells = []
+        self.sarrazin_clone_field = self.createScalarFieldCellLevelPy("LABELED_CLONES")
+        self.sarrazin_path_field = self.createScalarFieldPy("PATH_FIELD")
+
+    def start(self):
+        ## Here, we set up the field to monitor the cells in real time, the "Labeled Clones Field"
+
+        for cell in self.cellList:
+            self.sarrazin_clone_field[cell]= 0.5
+
+        for cell_loc in self.cellLocs:
+            sarrazin_clone = self.cellField[int(cell_loc.x),int(cell_loc.y),0]
+            self.sarrazin_clone_field[sarrazin_clone]= 1.0
+            self.sarraCells.append(sarrazin_clone)
+
+    def step(self,mcs):
+        for cell in self.sarraCells:
+            self.sarrazin_path_field[int(cell.xCOM), int(cell.yCOM), 0] = 1
