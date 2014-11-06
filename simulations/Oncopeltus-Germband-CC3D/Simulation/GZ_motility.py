@@ -71,7 +71,7 @@ pifName="InitializationPiffs/GrowthZoneGenesis_01_09_2014_for_paper_v03.piff"  #
 Time=time.localtime()
 Year=str(Time[0]); Month=str(Time[1]); Day=str(Time[2]); Hour=str(Time[3])
 Minute=str(Time[4]); Second=str(Time[5])
-folder="C:/CompuCell3D/Simulations/GZ_Motility_Force_July2013/OutputFiles/"
+folder="/Users/BarbaraMaria/Dropbox/growthzone/github/simulations/Oncopeltus-Germband-CC3D/OutputFiles/"
 timeTag=Month+"_"+Day+"_"+Year+"_"+Hour+"_"+Minute+"_"+Second
 
 ## Tracking flags

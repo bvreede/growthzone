@@ -792,7 +792,7 @@ class CellCounts(SteppablePy):
       self.inventory=self.simulator.getPotts().getCellInventory()
       self.cellList=CellList(self.inventory)
    def start(self):
-      folder='C:/CompuCell3D/Simulations/GZ_Motility_Force_July2013_PaperParameters/OutputFiles/'
+      folder='/Users/BarbaraMaria/Dropbox/growthzone/github/simulations/Oncopeltus-Germband-CC3D/OutputFiles/'
       Time=time.localtime()
       Year=str(Time[0]); Month=str(Time[1]); Day=str(Time[2]); Hour=str(Time[3])
       Minute=str(Time[4]); Second=str(Time[5])

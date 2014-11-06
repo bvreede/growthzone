@@ -297,7 +297,7 @@ class GrowthSignaling_stimulating02(SteppablePy):
                if cellDict["phaseCountdown"]==0:  # if cell has reached or surpassed its initial phase offset
                   yCM = cell.yCM/float(cell.volume)
                   xCM = cell.xCM/float(cell.volume)
-                  d = sqrt((xCM - x_center)**2 + (yCM - (y_post-90))**2)
+                  d = sqrt((xCM - x_center)**2 + (yCM - y_post)**2)
                   if d < self.d_sig:
                      cells_to_grow.append(cell)  # add cell to list of cells to evaluate for growth
                else:
@@ -506,57 +506,22 @@ class Segmentation(SteppablePy):
       ### Determine type of segment and increase segment # counter(segments alternate adhesion properties)
          segType=self.segNum%2
          self.segNum+=1
-      ### Locate the maximum and minimum x positions of future segment and last segment
-         count=0
-         ys_max=0
-         xs_min=0
-         xs_max=999
-         for cell in self.cellList:
-            if cell.type==1 or cell.type==2: # most recent segment added
-               yCM=cell.yCM/float(cell.volume)
-               if yCM<ys_max:
-                  ys_max=yCM
-         for cell in self.cellList:
-             if cell.type==3:
-                 yCM=cell.yCM/float(cell.volume)
-                 if yCM <= ys_max and yCM >= (ys_max - 80):
-                     xCM=cell.xCM/float(cell.volume)
-                     if xCM>xs_max:
-                         xCM=xs_max
-                     elif xCM<xs_min:
-                         xCM=xs_min
       ### Make a list of cells to add to new segment
          cells_for_segment=[]
+         count=0
          for cell in self.cellList:
             if cell.type==3: ## growth-zone cells
                yCM=cell.yCM/float(cell.volume)
                if yCM <= y_border:
-                   cells_for_segment.append(cell)
-                   count+=1
-         xb_min=0
-         xb_max=999
-         for  cell in cells_for_segment:
-             if cell.type==3:
-                 xCM=cell.xCM/float(cell.volume)
-                 if xCM>xb_max:
-                     xb_max=xCM
-                 if xCM<xb_min:
-                     xb_min=xCM
-      ### Change cell's types to add them to new segment
-         xxb_min=xb_min
-         xxb_max=xb_max
-         xxs_min=xs_min
-         xxs_max=xs_max
+                  cells_for_segment.append(cell)
+                  count+=1
+      ### Change cell's types to add them to new segment:
          if segType==1:
-             if (xxb_max - xxb_min) <= (xxs_max - xxs_min):
-                for cell in cells_for_segment:
-                    cell.type=1  # change cell type to Seg01
-
+            for cell in cells_for_segment:
+               cell.type=1  # change cell type to Seg01
          else:
-             if (xxb_max - xxb_min) <= (xxs_max - xxs_min):
-                for cell in cells_for_segment:
-                    cell.type=2 # change cell type to Seg02
-
+            for cell in cells_for_segment:
+               cell.type=2 # change cell type to Seg02
          print " >> Segment contains " + str(count) + " cells."
                     
 
@@ -650,89 +615,28 @@ class GradedMotility(SteppablePy):
                   surface=int(self.cs_low*d+0.5)
                   cell.targetSurface=surface
 
-class ExternalPotentialExample(SteppablePy): # Places an external potential on cells
-   def __init__(self,_simulator,_frequency,_V_p,_y_comp):
+# Counts GZ cells every freq MCS
+class CellCounts(SteppablePy):
+   def __init__(self,_simulator,_frequency):
       SteppablePy.__init__(self,_frequency)
       self.simulator=_simulator
       self.inventory=self.simulator.getPotts().getCellInventory()
       self.cellList=CellList(self.inventory)
-      self.V_p=_V_p
-      self.y_comp=_y_comp
-                         
+   def start(self):
+      folder='C:/CompuCell3D/Simulations/GrowthZone_Genesis_June2013/OutputFiles/'
+      filename=folder+'cell_counts_03.csv'
+      self.file=open(filename,'w')
+      self.file.write('MCS,GZ cell count\n')
    def step(self,mcs):
-   ## find y-position of poster-most GZ cell and center of growth zone
-      y_post=0
-      x_min=999
-      x_max=0
-      xs_min=999
-      xs_max=0
-      y_lastseg=0
+      cellcount=0
       for cell in self.cellList:
-         if cell.type==3: # GZ cell
-            yCM=cell.yCM/float(cell.volume)
-            xCM=cell.xCM/float(cell.volume)
-            if yCM>y_post:
-               y_post=yCM
-            if xCM>x_max:
-               x_max=xCM
-            elif xCM<x_min:
-               x_min=xCM
-      x_center=x_min + (x_max-x_min)/2.
-      for cell in self.cellList:
-          if cell.type==2 or cell.type==1: # Segment cell
-              yCM=cell.yCM/float(cell.volume)
-              xCM=cell.xCM/float(cell.volume)
-              if yCM>y_lastseg:
-                  y_lastseg=yCM
-      for cell in self.cellList:
-          yCM=cell.yCM/float(cell.volume)
-          xCM=cell.xCM/float(cell.volume)
-          if yCM < y_lastseg  and yCM > (y_lastseg - 70): # Segment cell
-              if xCM>xs_max:
-                   xs_max=xCM
-              elif xCM<xs_min:
-                   xs_min=xCM
-              
-      for cell in self.cellList:
-         if cell.type==3:
-             xx_min = xs_min
-             xx_max = xs_max
-             yy_lastseg = y_lastseg
-             yCM=cell.yCM/float(cell.volume)
-             xCM=cell.xCM/float(cell.volume)
-             if xCM < xx_min :
-                 yCM=cell.yCM/float(cell.volume)
-                 xCM=cell.xCM/float(cell.volume)
-                 d = sqrt((xCM - x_center)**2 + (yCM - (y_post))**2)
-                 V_x= self.V_p*((xCM - x_center)/d) 
-                 V_y= 1*self.V_p*((yCM - y_post)/d)
-                 cell.lambdaVecX = V_x
-                 cell.lambdaVecY = V_y
-             elif xCM > xx_max :
-                 yCM=cell.yCM/float(cell.volume)
-                 xCM=cell.xCM/float(cell.volume)
-                 d = sqrt((xCM - x_center)**2 + (yCM - (y_post))**2)
-                 V_x= self.V_p*((xCM - x_center)/d) 
-                 V_y= 1*self.V_p*((yCM - y_post)/d) + (y_post)/yCM
-                 cell.lambdaVecX = V_x
-                 cell.lambdaVecY = V_y
-             else:
-                 V_x = 0
-                 V_y = 8
-                 cell.lambdaVecX = V_x
-                 cell.lambdaVecY = V_y
-                
-      print ">> Posterior most y value is %.2f" %(y_post)
-      print ">> xx_max: %.2f" %(xx_max)
-      print ">> xs_max: %.2f" %(xs_max)
-      print ">> xx_min: %.2f" %(xx_min)
-      print ">> xs_min: %.2f" %(xs_min)
-      print ">> x_min: %.2f" %(x_min)
-      print ">> x_max: %.2f" %(x_max)
-            
-               
-
-                    
+         if cell.type==3: ##GZ cell
+            cellcount+=1
+      print '++++++++++++++\nMCS=' + str(mcs) + '\nNumber of Growth Zone cells= ' + str(cellcount) + '\n++++++++++++++++++'
+      self.file.write('\n'+str(mcs)+','+str(cellcount))
+   def finish(self):
+      self.file.close()
+                  
 # class GradedMotility(SteppablePy):
    # def __init__(self,_simulator,_frequency,_ls_high,_ls_low,_lv_high,_lv_low,_T_seg):
       # SteppablePy.__init__(self,_frequency)
