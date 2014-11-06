@@ -46,23 +46,26 @@ global T;
 # Neighbor order
 global nOrder
 
+## Cell-field initialization parameters
+# pifName="InitializationPiffs/Initial4.piff"
+
 ## Cell size parameters
 d = 10             # cell's side?
 target_V = d**2      # Cell's target value -- its typical volume
 target_S = int(4*d)  # Cell's target circumference -- its typical circumference
 
 ## Initial segment size parameters
-Lx =  15*d #20*d #15*d: Sim 2 on 1/9/2014 #20*d: Sim 1 on 1/9/2014
-Ly =  10*d #10*d
+Lx =  19*d # for Oncopeltus #25*d # for Tribolium
+Ly =  9*d # for Oncopeltus #10*d # for Tribolium
 N_seg = 2
 
 ## Growth-zone size parameters
 GZ_flag = 1
 GZ_x = Lx
-GZ_y =  22*d #15*d: Sim 2 on 1/9/2014 #22*d: Sim 1, 3 on 1/9/2014 #20*d #25*d (11:19) #20*d #2*Ly
+GZ_y = 35*d #28*d #20*d #2*Ly
 
 ## Growth signal parameters
-grow_sig_flag=1  ## 0 to turn off growth or growth-repression signaling
+grow_sig_flag= 1  ## 0 to turn off growth or growth-repression signaling
 grow_stim=1       ## 1 to turn on growth-stimulating "signal" from posterior
 grow_repr=0       ## 1 to turn on growth-repressing "signal" from anterior
 y_grow_sig= 20*d #15*d #Ly
@@ -83,8 +86,8 @@ divOrientation="Random"
 
 ## Simulation dimensions
 x_margin = 30*d
-y_top_margin = 60*d
-y_bottom_margin = 30*d
+y_top_margin = 9*Ly
+y_bottom_margin = 3*Ly
 
 Dx = Lx+2*x_margin
 Dy = N_seg*Ly+GZ_flag*GZ_y+y_top_margin+y_bottom_margin
@@ -92,8 +95,8 @@ Dz = 1
 
 # Segmention parameters
 segment_flag=0 # set to nonzero to run segmentation
-T_segment = 1200 # 1200 # segmentation period
-y_segment = 7*d # length of a newly-formed segment
+T_segment = 900 # 1200 # segmentation period
+y_segment = 8*d # length of a newly-formed segment
 y0_seg = y_top_margin+2*Ly  # bottom of initial segments
 
 # Cell-labeling parameters
@@ -181,8 +184,16 @@ def configureSimulation(sim):
    vlfpd = cc3d.ElementCC3D("Plugin",{"Name":"VolumeLocalFlex"})
    slfpd = cc3d.ElementCC3D("Plugin",{"Name":"SurfaceLocalFlex"})
    ntpd = cc3d.ElementCC3D("Plugin",{"Name":"NeighborTracker"})
-   comtpd = cc3d.ElementCC3D("Plugin",{"Name":"CenterOfMass"})   
+   comtpd = cc3d.ElementCC3D("Plugin",{"Name":"CenterOfMass"})
+
    
+## MUST INITIALIZE EXTERNAL POTENTIAL PLUGIN
+   # extPotential=cc3d.ElementCC3D("Plugin",{"Name":"ExternalPotential"})   
+   
+## Initialize cell field from piff file:
+   # piffinit = cc3d.ElementCC3D("Steppable",{"Type":"PIFInitializer"})
+   # piffinit.ElementCC3D("PIFName",{},pifName)
+  
 ## Initialize cell field
    uipd = cc3d.ElementCC3D("Steppable",{"Type":"UniformInitializer"})
    region = uipd.ElementCC3D("Region")
@@ -203,7 +214,8 @@ def configureSimulation(sim):
    region.ElementCC3D("BoxMin",{"x":x_margin,  "y":y_top_margin+2*Ly,  "z":0})
    region.ElementCC3D("BoxMax",{"x":x_margin+GZ_x,  "y":y_top_margin+2*Ly+GZ_y,  "z":1})
    region.ElementCC3D("Types",{}, "GZ" )
-   region.ElementCC3D("Width", {}, d)   
+   region.ElementCC3D("Width", {}, d)
+  
   
    CompuCellSetup.setSimulationXMLDescription(cc3d)
    
@@ -236,6 +248,10 @@ from GZ_genesis_steppables import Mitosis
 mitosis=Mitosis(_simulator=sim,_frequency=1,_V_div=V_div,_divType=divOrientation)
 steppableRegistry.registerSteppable(mitosis)
 
+# from GZ_genesis_steppables import ExternalPotentialExample
+# extPot=ExternalPotentialExample(_simulator=sim,_frequency=1,_V_p=V_p,_y_comp=y_comp)
+# steppableRegistry.registerSteppable(extPot)
+
 if segment_flag:
    from GZ_genesis_steppables import Segmentation
    segmentation=Segmentation(_simulator=sim,_frequency=1,_T_seg=T_segment,_y_seg=y_segment,_y0=y0_seg)
@@ -259,5 +275,9 @@ else:
    from GZ_genesis_steppables import CellGrowth
    cellGrowth=CellGrowth(_simulator=sim,_frequency=1,_tV=target_V,_tS=target_S,_T_double=T_double,_range_phase=range_phase)
    steppableRegistry.registerSteppable(cellGrowth)
-   
+  
+from GZ_motility_steppables import CellCounts
+cellCounts=CellCounts(_simulator=sim,_frequency=100)
+steppableRegistry.registerSteppable(cellCounts)
+  
 CompuCellSetup.mainLoop(sim,simthread,steppableRegistry)

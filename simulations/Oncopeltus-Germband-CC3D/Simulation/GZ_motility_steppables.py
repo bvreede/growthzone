@@ -7,6 +7,10 @@ import random
 from math import sqrt
 from copy import deepcopy
 import sys,time
+import numpy as np
+# import matplotlib
+# from matplotlib import pyplot as plt
+# import matplotlib.pyplot #as plt
 
 # Initializes the volume and surface area of all cells.  Runs once.
 class InitVolSur(SteppablePy):
@@ -753,8 +757,8 @@ class ExtPotSarrazin03(SteppablePy): # Places an external potential on cells
             yCM=cell.yCM/float(cell.volume)
             xCM=cell.xCM/float(cell.volume)
             d = sqrt((xCM - x_center)**2 + (yCM - (y_post))**2)   # finds cell distance from midpoint of posterior of GZ
-            if d < (y_post - (y_lastseg + 50)):#80)):
-               d2 = sqrt((xCM - x_center)**2 + (yCM - yGZ_center)**2)
+            if d < (y_post - (y_lastseg + 50)):#80)): #If the cell is within a specified radius of the posterior tip of the GZ
+               d2 = sqrt((xCM - x_center)**2 + (yCM - yGZ_center)**2)  # the distance of the cell from the center of the GZ
                if d2 >= 0.60*(y_post - yGZ_center):
                   V_x = 2*self.V_p*((xCM - x_center)/d)*(1-(yCM-y_lastseg)/(y_post-y_lastseg)) #new 1/2 
                   # V_x = self.V_p*((xCM - x_center)/d)*(1-(yCM-y_lastseg)/(y_post-y_lastseg))
@@ -783,6 +787,35 @@ class ExtPotSarrazin03(SteppablePy): # Places an external potential on cells
             # else:
                # V_x = 0
             # cell.lambdaVecX = V_x            
+            
+      # print '#######################################'
+      # print '#######################################'
+      # print 'x_min=' + str(x_min) + ' x_max=' + str(x_max) + ' y_post=' + str(y_post) + ' y_lastseg=' + str(y_lastseg)
+            
+      # if mcs==10:
+         # vel_field_array=np.array([])  # defines the array of velocity vectors
+         # for cell in self.cellList:
+            # if cell:
+         #### find the coordinates of the cell:
+               # x=cell.xCM/float(cell.volume)
+               # y=cell.yCM/float(cell.volume)
+         ##### find the velocity vector for the cell:
+               # Vx=cell.lambdaVecX
+               # Vy=cell.lambdaVecY
+               # v_cell=np.array([[x,y,Vx,Vy]])
+         ##### add the cell's velocity vector to the vector array
+               # vel_field_array=np.concatenate((vel_field_array,v_cell),axis=0)
+               
+         #### Plot the vector field
+         # X,Y,U,V = zip(*vel_field_array)
+         # plt.figure()
+         # vecplot=plt.gca()
+         # vecplot.quiver(X,Y,U,V,angles='xy',scale_units='xy',scale=1)
+         # vecplot.set_xlim([x_min-10,x_max+10])
+         # vecplot.set_ylim([y_lastseg-100,y_post+10])
+         # plt.draw()
+         # plt.show()
+         
             
 # Counts GZ cells every freq MCS
 class CellCounts(SteppablePy):
@@ -871,56 +904,131 @@ class CellCounts(SteppablePy):
 ##               type = str(cell.type)
 ##               motilityFile.write(id+','+type+','+x0+','+y0+','+dx+','+dy+','+dt+'\n')
 ##         motilityFile.close()
-##         
-##class LengthTracker(SteppablePy):
-##   def __init__(self,_simulator,_frequency,_filename):
-##      SteppablePy.__init__(self,_frequency)
-##      self.simulator=_simulator
-##      self.inventory=self.simulator.getPotts().getCellInventory()
-##      self.cellList=CellList(self.inventory)      
-##      
-##      self.filename=_filename
-##      
-##   def start(self):
-##      ## create file and write header
-##      lengthFile=open(self.filename,'w')
-##      lengthFile.write('mcs,length\n')
-##      ## calculate length of simulated germ band
-##      ## find max and min y
-##      y_max=0
-##      y_min=9999
-##      for cell in self.cellList:
-##         if cell: # if not Medium
-##            yCM=cell.yCM/float(cell.volume)
-##            if yCM < y_min:
-##               y_min=yCM
-##            elif yCM > y_max:
-##               y_max=yCM
-##      length = y_max - y_min
-##      ## write length onto file
-##      lengthFile.write('0,'+str(length)+'\n')
-##      lengthFile.close()
-##      
-##   def step(self,mcs):
-##      if mcs>0:
-##      ## calculate length of simulated germ band
-##      ## find max and min y
-##         y_max=0
-##         y_min=9999
-##         for cell in self.cellList:
-##            if cell: # if not Medium
-##               yCM=cell.yCM/float(cell.volume)
-##               if yCM < y_min:
-##                  y_min=yCM
-##               elif yCM > y_max:
-##                  y_max=yCM
-##         length = y_max - y_min
-##         ## write length onto file
-##         lengthFile=open(self.filename,'a')
-##         lengthFile.write(str(mcs)+','+str(length)+'\n')
-##         lengthFile.close()
-##  
+##     
 
+    
+class LengthTracker(SteppablePy):
+  def __init__(self,_simulator,_frequency,_filename):
+     SteppablePy.__init__(self,_frequency)
+     self.simulator=_simulator
+     self.inventory=self.simulator.getPotts().getCellInventory()
+     self.cellList=CellList(self.inventory)      
+     
+     self.filename=_filename
+     
+  def start(self):
+     ## create file and write header
+     lengthFile=open(self.filename,'w')
+     lengthFile.write('mcs,length\n')
+     ## calculate length of simulated germ band
+     ## find max and min y
+     y_max=0
+     y_min=9999
+     for cell in self.cellList:
+        if cell: # if not Medium
+           yCM=cell.yCM/float(cell.volume)
+           if yCM < y_min:
+              y_min=yCM
+           elif yCM > y_max:
+              y_max=yCM
+     length = y_max - y_min
+     ## write length onto file
+     lengthFile.write('0,'+str(length)+'\n')
+     lengthFile.close()
+     
+  def step(self,mcs):
+     if mcs>0:
+     ## calculate length of simulated germ band
+     ## find max and min y
+        y_max=0
+        y_min=9999
+        for cell in self.cellList:
+           if cell: # if not Medium
+              yCM=cell.yCM/float(cell.volume)
+              if yCM < y_min:
+                 y_min=yCM
+              elif yCM > y_max:
+                 y_max=yCM
+        length = y_max - y_min
+        ## write length onto file
+        lengthFile=open(self.filename,'a')
+        lengthFile.write(str(mcs)+','+str(length)+'\n')
+        lengthFile.close()
+ 
+class GZ_AspectRatioTracker(SteppablePy):
+  def __init__(self,_simulator,_frequency,_filename):
+     SteppablePy.__init__(self,_frequency)
+     self.simulator=_simulator
+     self.inventory=self.simulator.getPotts().getCellInventory()
+     self.cellList=CellList(self.inventory)      
+     
+     self.filename=_filename
+     
+  def start(self):
+     ## create file and write header
+     lengthFile=open(self.filename,'w')
+     lengthFile.write('mcs,GZ length,GZ width,l:w ratio\n')
+     ## calculate length of simulated growth zone
+     ## find max and min y
+     y_max=0
+     y_min=9999
+     for cell in self.cellList:
+        if cell.type==3: # if GZ cell
+           yCM=cell.yCM/float(cell.volume)
+           if yCM < y_min:
+              y_min=yCM
+           elif yCM > y_max:
+              y_max=yCM
+     length = y_max - y_min
+     ## calculate max and min x
+     x_max=0
+     x_min=9999
+     for cell in self.cellList:
+         if cell.type==3: # if in the GZ
+            xCM=cell.xCM/float(cell.volume)
+            if xCM < x_min:
+               x_min=xCM
+            if xCM > x_max:
+               x_max=xCM
+     width=x_max-x_min
+     ratio=length/float(width)
+     
+     ## write onto file
+     lengthFile.write('0,'+str(length)+','+str(width)+','+str(ratio)+'\n')
+     lengthFile.close()
+     
+  def step(self,mcs):
+     if mcs>0:
+     ## calculate length of simulated growth zone
+     ## find max and min y
+         y_max=0
+         y_min=9999
+         for cell in self.cellList:
+            if cell.type==3: # if GZ cell
+               yCM=cell.yCM/float(cell.volume)
+               if yCM < y_min:
+                  y_min=yCM
+               elif yCM > y_max:
+                  y_max=yCM
+         length = y_max - y_min
+     ## calculate max and min x
+         x_max=0
+         x_min=9999
+         for cell in self.cellList:
+            if cell.type==3: # if in the GZ
+               xCM=cell.xCM/float(cell.volume)
+               if xCM < x_min:
+                  x_min=xCM
+               if xCM > x_max:
+                  x_max=xCM
+         width=x_max-x_min
+         ratio=length/float(width)
+     
+     ## write onto file
+         lengthFile=open(self.filename,'a')
+         lengthFile.write(str(mcs)+','+str(length)+','+str(width)+','+str(ratio)+'\n')
+         lengthFile.close()
+ 
             
 # class GradedMotility(SteppablePy):
    # def __init__(self,_simulator,_frequency,_ls_high,_ls_low,_lv_high,_lv_low,_T_seg):
