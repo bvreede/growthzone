@@ -9,7 +9,7 @@ Contact: b.vreede@gmail.com
 Date: 5 November 2014
 '''
 
-import csv
+import csv, pylab
 
 '''
 Specify input parameters: input folder and file.
@@ -46,9 +46,7 @@ for line in csvdata:
 	elif line[3] == '3': #the third and final measurement entry of the photo
 		temp.append(line)
 		#test if three measurements are from the same image
-		if temp[0][0] == temp[1][0] and temp[1][0] == temp[2][0]:
-			continue
-		else:
+		if temp[0][0] != temp[1][0] or temp[1][0] != temp[2][0]:
 			print "Error: measurements not in order on image" + line[0]
 			break
 		#test if there are three measurements in total.
@@ -71,14 +69,93 @@ segments = list(set(segments)) #make a list of unique 'segments' entries
 devt_time.sort()
 segments.sort()
 
+### DATA EXPLAINED: ###
+### order of measurements:  'w1', 'w2', 'w3', 'w4', 'l5', 'l6', 'l7', 'l8', 'a1', 'a2', 'a3'
+### corresponding to [data]: 2     3     4     5     6     7     8     9     10    11    12
+### Which correspond to the following measurements in the macro:
+##### w1/[2]: The width of the growthzone at its widest part
+##### w2/[3]: Width of the first stripe
+##### w3/[4]: Width of the second stripe
+##### w4/[5]: Width of the third stripe
+##### l5/[6]: The tip of the growthzone to the first stripe
+##### l6/[7]: The tip of the growthzone to the middle of the cross section of the growth zone (w1)
+##### l7/[8]: Length between the first and second stripe
+##### l8/[9]: Length between the second and third stripe
+##### l9/[10]: The area of the growthzone up to the first stripe
+##### l10/[11]: The area of the growthzone between the first and second stripe
+##### l11/[12]: The area of the growthzone between the second and third stripe
+
+def plotmakr(x,y,xlab,ylab,name):
+	pylab.xlabel(xlab)
+	pylab.ylabel(ylab)
+	pylab.title('%s by %s' %(ylab,xlab))
+	pylab.plot(x,y,'go')
+	pylab.savefig('%s.png' %name)
+	pylab.close()
+	pylab.clf()
+	return [],[]
+
+
 ### PLOTS ###
 #1. width of GZ divided by length of GZ, in the different segmental stages.
+## data[2]/data[6] by data[1]
 
+x,y=[],[]
+for line in data:
+	y.append(line[2]/line[6])
+	x.append(line[1]) 
+x,y = plotmakr(x,y,'segment number','GZ width / GZ length','plot1')
 
-#2. length of GZ divided by length of GZ until crossing point of the length/width measurements -   in the different segmental stages.
-#3. change in GZ / first segment / second segment size iin the different segmental stages.
+#2. length of GZ divided by length of GZ until crossing point of the length/width measurements in the different segmental stages
+## data[6]/data[7] by data[1]
+
+for line in data:
+	y.append(line[6]/line[7])
+	x.append(line[1])
+x,y = plotmakr(x,y,'segment number','GZ length / top GZ','plot2')
+
+#3. change in GZ / first segment / second segment size in the different segmental stages.
+## ???
+## NB not all measurements have 2nd segment!
+
 #4. width of GZ divided by width of 1st segment in the different segmental stages.
-#5. length of first segment divided by length of 2nd seg' in the different segmental stages.
-#6. size of 1st segment divided by size of 2nd seg' in the different segmental stages.
-#7. size of GZ in embryos with X segments devided by size of GZ in embryos with X+1 segments 
+## data[2]/data[3] by data[1]
+for line in data:
+	y.append(line[2]/line[3])
+	x.append(line[1])
+x,y = plotmakr(x,y,'segment number','GZ width / 1st segment width','plot4')
 
+#5. length of first segment divided by length of 2nd seg' in the different segmental stages.
+## data[8]/data[9] by data[1]
+## NB not all measurements have 2nd segment!
+for line in data:
+	if line[9] == 0.0:
+		continue
+	y.append(line[8]/line[9])
+	x.append(line[1])
+x,y = plotmakr(x,y,'segment number','1st segment length / 2st segment length','plot5')
+
+#6. size of 1st segment divided by size of 2nd seg' in the different segmental stages.
+## data[11]/data[12] by data[1]
+## NB not all measurements have 2nd segment!
+for line in data:
+	if line[12] == 0.0:
+		continue
+	y.append(line[11]/line[12])
+	x.append(line[1])
+x,y = plotmakr(x,y,'segment number','1st segment area / 2st segment area','plot6')
+
+#7. size of GZ in embryos with X segments devided by size of GZ in embryos with X+1 segments 
+## total(data[10])_segment/total(data[10])_segment+1 by segments
+gzsize = {}
+for s in segments:
+	sl = []
+	for line in data:
+		if line[1] == s:
+			sl.append(line[10])
+	gzsize[s] = sum(sl)/len(sl)
+for i in range(1,len(segments)):
+	x.append(i)
+	y.append(gzsize[i]/gzsize[i+1])
+			
+x,y = plotmakr(x,y,'segment number','GZ size (X) / GZ size (X+1)','plot7')
