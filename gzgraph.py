@@ -3,20 +3,32 @@ This script can be used to convert a csv table with measurement data to a given 
 of graphs. It is adjusted to growth zone measurements made in ImageJ with an .ijm macro
 that can be found in the same git repo (bvreede/growthzone).
 When in doubt, check the conditions below (in comment sections before indvidual modules
-in the script) for the precise file set-up that is required for the script to function well!
+in the script) for the precise file set-up that is required for the script to function well,
+and the results to not lie to you.
 Author: Barbara Vreede
 Contact: b.vreede@gmail.com
 Date: 5 November 2014
 '''
 
-import csv, pylab
+import os, csv, pylab
 
 '''
-Specify input parameters: input folder and file.
+Specify input parameters: input/output folders and files.
 
 '''
 folder = "/home/barbara/Dropbox/shared_work/growthzone"
 data = "output.csv"
+outfolder = "plots_underconstruction"
+readmefile = "README.txt"
+
+'''
+Make outputfolder (if necessary) and open readme file.
+'''
+if os.path.exists("%s/%s" %(folder,outfolder)):
+	pass
+else:
+	os.system("mkdir %s/%s" %(folder,outfolder))
+readme = open("%s/%s/%s" %(folder,outfolder,readmefile), "w")
 
 '''
 Read input file and import the data to memory.
@@ -92,8 +104,8 @@ def plotmakr(x,y,xlab,ylab,name,clr):
 	pylab.title('%s by %s' %(ylab,xlab))
 	pylab.plot(x,y,clr)
 	pylab.savefig('%s.png' %name)
-	#pylab.close()
-	#pylab.clf()
+	pylab.close()
+	pylab.clf()
 	return [],[]
 
 
