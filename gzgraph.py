@@ -103,11 +103,14 @@ mlabels = ['age','segments','growthzone width','stripe 1 width','stripe 2 width'
 ### HOW TO MAKE THE PLOTS ###
 plotcount = 0
 
-def plotmakr(x,y,title,descr,calc,xlab=segments):
+def plotmakr(x,y,title,descr,calc,xlab='segments'):
 	# calculate the averages:
 	xavg = list(set(x)) #collect all distinct x values in the dataset
 	xavg.sort()
 	yavg = []
+	y_bp = []
+	for n in range(min(xavg)-1):
+		y_bp.append([])
 	for xval in xavg:
 		ycoll = []
 		for p,q in zip(x,y):
@@ -115,8 +118,10 @@ def plotmakr(x,y,title,descr,calc,xlab=segments):
 				ycoll.append(q)
 		yval = sum(ycoll)/len(ycoll)
 		yavg.append(yval)
+		y_bp.append(ycoll)
 
-	# apply labels, set graph limits
+	# open figure, apply labels, set graph limits
+	plt.figure()
 	plt.xlabel(xlab)
 	#plt.ylabel(ylab)
 	plt.xlim([0,10])
@@ -124,9 +129,10 @@ def plotmakr(x,y,title,descr,calc,xlab=segments):
 	plt.title(title)
 
 	# name the plot & write the readme description
+	global plotcount
 	plotcount += 1
 	name = 'plot' + str(plotcount)
-	readme.write("%s:\t%s\n\t%s\n\t%s\n\n" %(name,title,descr,calc)
+	readme.write("%s:\t%s\n\t%s\n\t%s\n\n" %(name,title,descr,calc))
 
 	# plot the actual data
 	plt.plot(x,y,'y.') #optional for multiple plots in 1 fig: label='label'
@@ -135,16 +141,28 @@ def plotmakr(x,y,title,descr,calc,xlab=segments):
 	plt.savefig('%s/%s/%s-basic.png' %(folder,outfolder,name)) #also save a .png
 
 	# calculate and plot the trendline/average
-	z = numpy.polyfit(xavg, yavg, 7) #calculate trendline as 7-degree polynomial
+	z = numpy.polyfit(xavg, yavg, 6) #calculate trendline as 6-degree polynomial
 	p = numpy.poly1d(z)
 	plt.plot(xavg,p(xavg),"k--")
 	plt.plot(xavg,yavg,'ko')
 	plt.savefig('%s/%s/%s-trend.svg' %(folder,outfolder,name))#save the plot with the trendline
 	plt.savefig('%s/%s/%s-trend.png' %(folder,outfolder,name))#also save a .png
-
-	# close matplotlib to clear the data for the next plot; return empty lists for new x/y collection
-	plt.close()
 	plt.clf()
+
+	# boxplot with the data
+	plt.figure()
+	plt.xlabel(xlab)
+	#plt.ylabel(ylab)
+	plt.xlim([0,10])
+	#plt.ylim([0,4])
+	plt.title(title)
+	plt.boxplot(y_bp)
+	#plt.savefig('%s/%s/%s-boxplot.svg' %(folder,outfolder,name))#save the plot with the trendline
+	plt.savefig('%s/%s/%s-boxplot.png' %(folder,outfolder,name))#also save a .png
+	plt.clf()
+
+	# clear the data for the next plot; return empty lists for new x/y collection
+	plt.close()
 	return [],[]
 
 
@@ -159,27 +177,32 @@ for i in range(2,len(data[0])):
 			continue
 		y.append(line[i])
 		x.append(line[1])
-	plname,x,y = plotmakr(x,y,,mlabels[i])
+	title = mlabels[i]
+	descr = '%s in the different segmental stages' %mlabels[i]
+	calc = 'data[%s] by data[1]' %i
+	x,y = plotmakr(x,y,title,descr,calc)
 	
 
 ## PLOT: GZ WIDTH/GZ LENGTH ##
 for line in data:
 	y.append(line[2]/line[6])
-	x.append(line[1]) 
+	x.append(line[1])
 
-plname,x,y = plotmakr(x,y,'segment number','GZ width / GZ length','plot1')
-readme.write("%s:\twidth of GZ divided by length of GZ, in the different segmental stages.\n" %name)
-readme.write("\tdata[2]/data[6] by data[1]\n\n")
+title = 'GZ width / GZ length'
+descr = 'width of GZ divided by length of GZ, in the different segmental stages'
+calc = 'data[2]/data[6] by data[1]'
+x,y = plotmakr(x,y,title,descr,calc)
 
 
-## PLOT 2 ##
-readme.write("Plot2:\tlength of GZ divided by length of GZ until crossing point of the length/width measurements in the different segmental stages\n")
-readme.write("\tdata[6]/data[7] by data[1]\n\n")
-
+## PLOT: GZ LENGTH/GZ TIP ##
 for line in data:
 	y.append(line[6]/line[7])
 	x.append(line[1])
-plname,x,y = plotmakr(x,y,'segment number','GZ length / top GZ','plot2')
+
+title = 'GZ length / top GZ'
+descr = 'length of GZ divided by length of GZ until crossing point of the length/width measurements in the different segmental stages'
+calc = 'data[6]/data[7] by data[1]'
+x,y = plotmakr(x,y,title,descr,calc)
 
 '''
 ## PLOT 3 ##
@@ -188,45 +211,47 @@ readme.write("\n\n")
 #3. change in GZ / first segment / second segment size in the different segmental stages.
 ## ???
 ## NB not all measurements have 2nd segment!
+'''
 
-
-## PLOT 4 ##
-readme.write("Plot4:\twidth of GZ divided by width of 1st segment in the different segmental stages.\n")
-readme.write("\tdata[2]/data[3] by data[1]\n\n")
-
+## PLOT: GZ WIDTH / 1st SEG WIDTH ##
 for line in data:
 	y.append(line[2]/line[3])
 	x.append(line[1])
-x,y = plotmakr(x,y,'segment number','GZ width / 1st segment width','plot4')
 
-## PLOT 5 ##
-readme.write("Plot5:\tlength of first segment divided by length of 2nd seg' in the different segmental stages.\n")
-readme.write("\tdata[8]/data[9] by data[1]\n\n")
+title = 'GZ width / 1st segment width'
+descr = 'Width of GZ divided by width of 1st segment in the different segmental stages.'
+calc = 'data[2]/data[3] by data[1]'
+x,y = plotmakr(x,y,title,descr,calc)
+
+
+## PLOT: LENGTH 1st/2nd ##
 ## NB not all measurements have 2nd segment!
-
 for line in data:
 	if line[9] == 0.0:
 		continue
 	y.append(line[8]/line[9])
 	x.append(line[1])
-x,y = plotmakr(x,y,'segment number','1st segment length / 2nd segment length','plot5')
 
-## PLOT 6 ##
-readme.write("Plot6:\tsize of 1st segment divided by size of 2nd seg' in the different segmental stages.\n")
-readme.write("\tdata[11]/data[12] by data[1]\n\n")
+title = '1st segment length / 2nd segment length'
+descr = 'Length of first segment divided by length of 2nd segment in the different segmental stages'
+calc = 'data[8]/data[9] by data[1]'
+x,y = plotmakr(x,y,title,descr,calc)
+
+## PLOT: AREA 1st/2nd ##
 ## NB not all measurements have 2nd segment!
-
 for line in data:
 	if line[12] == 0.0:
 		continue
 	y.append(line[11]/line[12])
 	x.append(line[1])
-x,y = plotmakr(x,y,'segment number','1st segment area / 2nd segment area','plot6')
 
-## PLOT 7 ##
-readme.write("Plot7:\tsize of GZ in embryos with X segments devided by size of GZ in embryos with X+1 segments \n")
-readme.write("\ttotal(data[10])_segment/total(data[10])_segment+1 by segments\n\n")
+title = '1st segment area / 2nd segment area'
+descr = 'Size of 1st segment divided by size of 2nd segment in the different segmental stages'
+calc = 'data[11]/data[12] by data[1]'
+x,y = plotmakr(x,y,title,descr,calc)
 
+
+## PLOT: DELTA GZ ##
 gzsize = {}
 for s in segments:
 	sl = []
@@ -237,20 +262,20 @@ for s in segments:
 for i in range(1,len(segments)):
 	x.append(i)
 	y.append(gzsize[i]/gzsize[i+1])
-			
-x,y = plotmakr(x,y,'segment number','GZ size (X) / GZ size (X+1)','plot7')
 
-## PLOT ##
-readme.write("\n")
-readme.write("\n\n")
-#8. GZ area by segment number
+title = 'GZ size (X) / GZ size (X+1)'
+descr = 'size of GZ in embryos with X segments devided by size of GZ in embryos with X+1 segments '
+calc = 'total(data[10])_segment/total(data[10])_segment+1 by segments'
+x,y = plotmakr(x,y,title,descr,calc)
 
-## PLOT ##
-readme.write("\n")
-readme.write("\n\n")
+'''
+## PLOT: DELTA GZ ##
+## (Upgrade: these three can be on one plot, different colour for each one)
+
+
 #9a. delta GZ area by segment number (absolute size, not percentage)
 #9b. 1st segment area number by age
-#9c. 2nd segment area number by age(these three can be on one plot, different colour for each one)
+#9c. 2nd segment area number by age
 
 ## PLOT ##
 readme.write("\n")
