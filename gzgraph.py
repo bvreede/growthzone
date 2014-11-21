@@ -83,6 +83,36 @@ segments = list(set(segments)) #make a list of unique 'segments' entries
 devt_time.sort()
 segments.sort()
 
+'''
+module that calculates data averages and standard deviations.
+Input is two numbers, corresponding to columns in the data matrix
+(first number is the category, the second number is the data for which
+averages etc. need to be calculated)
+output is a matrix where each line contains the category, then the average
+of datapoints for all instances in that category, and then the standard
+deviation of those observations.
+'''
+def avgmatrix(cat,dat):
+	global data
+	matrix = []
+	# collect all categories
+	datacat = []
+	for i in data:
+		datacat.append(i[cat])
+	datacat = list(set(datacat))
+	# collect all data per category
+	for j in datacat:
+		dcoll = []
+		for i in data:
+			if i[cat] == j:
+				dcoll.append(i[dat])
+		davg = numpy.mean(dcoll)
+		dstd = numpy.std(dcoll)
+		line = [j,davg,dstd]
+		matrix.append(line)
+	return matrix
+
+
 ### DATA EXPLAINED: ###
 readme.write("order of measurements:\t\t'w1'\t'w2'\t'w3'\t'w4'\t'l5'\t'l6'\t'l7'\t'l8'\t'a9'\t'a10'\t'a11'\n")
 readme.write("corresponding to [data]:\t2   \t3   \t4   \t5   \t6   \t7   \t8   \t9   \t10  \t11   \t12\n\n")
@@ -165,7 +195,7 @@ def plotmakr(x,y,title,descr,calc,xlab='segments'):
 	plt.close()
 	return [],[]
 
-
+"""
 ### PLOTS ###
 
 ## basic measurement plots ##
@@ -251,8 +281,9 @@ calc = 'data[11]/data[12] by data[1]'
 x,y = plotmakr(x,y,title,descr,calc)
 
 
-## PLOT: DELTA GZ ##
+## PLOT: DELTA GZ (2 variants) ##
 gzsize = {}
+n = []
 for s in segments:
 	sl = []
 	for line in data:
@@ -262,11 +293,17 @@ for s in segments:
 for i in range(1,len(segments)):
 	x.append(i)
 	y.append(gzsize[i]/gzsize[i+1])
+	n.append(gzsize[i]-gzsize[i+1])
 
 title = 'GZ size (X) / GZ size (X+1)'
 descr = 'size of GZ in embryos with X segments devided by size of GZ in embryos with X+1 segments '
 calc = 'total(data[10])_segment/total(data[10])_segment+1 by segments'
-x,y = plotmakr(x,y,title,descr,calc)
+y,y = plotmakr(x,y,title,descr,calc)
+
+title = 'GZ size (X) - GZ size (X+1)'
+descr = 'size of GZ in embryos with X segments minus size of GZ in embryos with X+1 segments '
+calc = 'total(data[10])_segment - total(data[10])_segment+1 by segments'
+x,n = plotmakr(x,n,title,descr,calc)
 
 '''
 ## PLOT: DELTA GZ ##
@@ -300,7 +337,7 @@ readme.write("\n\n")
 ##do the segments, once formed, change in size?
 
 '''
-
+"""
 
 readme.close()
 
