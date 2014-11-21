@@ -104,8 +104,12 @@ def avgmatrix(cat,dat):
 	for j in datacat:
 		dcoll = []
 		for i in data:
+			if i[dat] == 0.0:
+				continue
 			if i[cat] == j:
 				dcoll.append(i[dat])
+		if sum(dcoll) == 0.0:
+			continue
 		davg = numpy.mean(dcoll)
 		dstd = numpy.std(dcoll)
 		line = [j,davg,dstd]
@@ -195,7 +199,7 @@ def plotmakr(x,y,title,descr,calc,xlab='segments'):
 	plt.close()
 	return [],[]
 
-"""
+
 ### PLOTS ###
 
 ## basic measurement plots ##
@@ -234,14 +238,6 @@ descr = 'length of GZ divided by length of GZ until crossing point of the length
 calc = 'data[6]/data[7] by data[1]'
 x,y = plotmakr(x,y,title,descr,calc)
 
-'''
-## PLOT 3 ##
-readme.write("\n")
-readme.write("\n\n")
-#3. change in GZ / first segment / second segment size in the different segmental stages.
-## ???
-## NB not all measurements have 2nd segment!
-'''
 
 ## PLOT: GZ WIDTH / 1st SEG WIDTH ##
 for line in data:
@@ -282,6 +278,106 @@ x,y = plotmakr(x,y,title,descr,calc)
 
 
 ## PLOT: DELTA GZ (2 variants) ##
+gzmatrix = avgmatrix(1,10)
+
+for n in range(1,len(gzmatrix)):
+	x.append(gzmatrix[n][0])
+	y.append((gzmatrix[n][1])-(gzmatrix[n-1][1]))
+
+title = 'delta growthzone area'
+descr = 'average GZ size of embryos with X segments minus average GZ size of embryos with X-1 segments'
+calc = 'avg(data[10]) in s - avg(data[10]) in s-1 by data[1]'
+x,y = plotmakr(x,y,title,descr,calc)
+
+for n in range(1,len(gzmatrix)):
+	x.append(gzmatrix[n][0])
+	y.append((gzmatrix[n][1])/(gzmatrix[n-1][1]))
+
+title = 'percentage decrease of growthzone area'
+descr = 'average GZ size of embryos with X segments divided by average GZ size of embryos with X-1 segments'
+calc = 'avg(data[10]) in s / avg(data[10]) in s-1 by data[1]'
+x,y = plotmakr(x,y,title,descr,calc)
+
+
+## PLOT: DELTA SEGMENTS (2x2 variants) ##
+## NB not all measurements have 1st/2nd segment!
+
+fsmatrix = avgmatrix(1,11)
+for n in range(1,len(fsmatrix)):
+	x.append(fsmatrix[n][0])
+	y.append((fsmatrix[n][1])-(fsmatrix[n-1][1]))
+
+title = 'delta 1st segment (area)'
+descr = 'change in latest ("first") segment size in the different segmental stages'
+calc = 'avg(data[11]) in s - avg(data[11]) in s-1 by data[1]'
+x,y = plotmakr(x,y,title,descr,calc)
+
+for n in range(1,len(fsmatrix)):
+	x.append(fsmatrix[n][0])
+	y.append((fsmatrix[n][1])/(fsmatrix[n-1][1]))
+
+title = 'percentage change 1st segment (area)'
+descr = 'change in latest ("first") segment size in the different segmental stages'
+calc = 'avg(data[11]) in s / avg(data[11]) in s-1 by data[1]'
+x,y = plotmakr(x,y,title,descr,calc)
+
+ssmatrix = avgmatrix(1,12)
+for n in range(1,len(ssmatrix)):
+	x.append(ssmatrix[n][0])
+	y.append((ssmatrix[n][1])-(ssmatrix[n-1][1]))
+
+title = 'delta 2nd segment (area)'
+descr = 'change in second segment size in the different segmental stages'
+calc = 'avg(data[12]) in s - avg(data[12]) in s-1 by data[1]'
+x,y = plotmakr(x,y,title,descr,calc)
+
+for n in range(1,len(ssmatrix)):
+	x.append(ssmatrix[n][0])
+	y.append((ssmatrix[n][1])/(ssmatrix[n-1][1]))
+
+title = 'percentage change 2nd segment (area)'
+descr = 'change in second segment size in the different segmental stages'
+calc = 'avg(data[12]) in s / avg(data[12]) in s-1 by data[1]'
+x,y = plotmakr(x,y,title,descr,calc)
+
+
+
+## PLOT: GZ AREA DIVIDED BY LENGTH X WIDTH ##
+for line in data:
+	y.append(line[10]/(line[2]*line[6]))
+	x.append(line[1])
+
+title = 'GZ area / (GZ length x GZ width)'
+descr = 'GZ area divided by the product of GZ length and width'
+calc = 'data[10]/(data[2]*data[6]) by data[1]'
+x,y = plotmakr(x,y,title,descr,calc)
+
+## PLOT: GZ AREA DIVIDED BY GZ LENGTH ##
+for line in data:
+	y.append(line[10]/line[2])
+	x.append(line[1])
+
+title = 'GZ area / length'
+descr = 'GZ area divided by GZ length'
+calc = 'data[10]/data[2] by data[1]'
+x,y = plotmakr(x,y,title,descr,calc)
+
+## PLOT: GZ AREA DIVIDED GZ WIDTH ##
+for line in data:
+	y.append(line[10]/line[6])
+	x.append(line[1])
+
+title = 'GZ area / width'
+descr = 'GZ area divided by GZ width'
+calc = 'data[10]/data[6] by data[1]'
+x,y = plotmakr(x,y,title,descr,calc)
+
+
+"""
+
+
+
+
 gzsize = {}
 n = []
 for s in segments:
