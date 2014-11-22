@@ -182,6 +182,7 @@ def plotmakr(x,y,title,descr,calc,xlab='segments'):
 	plt.savefig('%s/%s/%s-trend.svg' %(folder,outfolder,name))#save the plot with the trendline
 	plt.savefig('%s/%s/%s-trend.png' %(folder,outfolder,name))#also save a .png
 	plt.clf()
+	plt.close()
 
 	# boxplot with the data
 	plt.figure()
@@ -194,8 +195,6 @@ def plotmakr(x,y,title,descr,calc,xlab='segments'):
 	#plt.savefig('%s/%s/%s-boxplot.svg' %(folder,outfolder,name))#save the plot with the trendline
 	plt.savefig('%s/%s/%s-boxplot.png' %(folder,outfolder,name))#also save a .png
 	plt.clf()
-
-	# clear the data for the next plot; return empty lists for new x/y collection
 	plt.close()
 	return [],[]
 
@@ -341,6 +340,30 @@ calc = 'avg(data[12]) in s / avg(data[12]) in s-1 by data[1]'
 x,y = plotmakr(x,y,title,descr,calc)
 
 
+## PLOT: DO SEGMENTS CHANGE IN SIZE? ##
+## USE the fsmatrix and ssmatrix calculated before.
+## these are the average sizes of each segment (first or second)
+
+for n in range(3,len(segments)):
+	### segment 1 in cat 2,3,4,5,6,7,8
+	### segment 2 in cat 3,4,5,6,7,8,9
+	# get category n
+	x.append(n)
+	# get segment 2 in category n
+	for line in ssmatrix:
+		if line[0] == n:
+			segtwo = line[1]
+	# get segment 1 in category n-1
+	for line in fsmatrix:
+		if line[0] == n-1:
+			segone = line[1]
+	y.append(segtwo/segone)
+
+title = 'segment area change post-formation'
+descr = 'change in the size of a segment as it transitions from being segment 1 to being segment 2'
+calc = 'avg(data[12]) in s / avg(data[11]) in s-1 by data[1]'
+x,y = plotmakr(x,y,title,descr,calc)
+			
 
 ## PLOT: GZ AREA DIVIDED BY LENGTH X WIDTH ##
 for line in data:
@@ -373,10 +396,9 @@ calc = 'data[10]/data[6] by data[1]'
 x,y = plotmakr(x,y,title,descr,calc)
 
 
+
+
 """
-
-
-
 
 gzsize = {}
 n = []
@@ -426,14 +448,17 @@ readme.write("\n\n")
 #12. y = x + g where y = gz+first segment at t = 1; x = gz at t = 0; g = growth
 ##is growth different between different segment additions?
 
-## PLOT ##
-readme.write("\n")
-readme.write("\n\n")
-#13. segment 2 in t = 1 - segment 1 in t =0)
-##do the segments, once formed, change in size?
+
 
 '''
 """
 
 readme.close()
+
+'''
+Notes for update:
+Error bars can be added with: plt.errorbar(x,y,yerr=e) where e is the matrix of error bars.
+
+'''
+
 
