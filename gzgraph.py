@@ -399,31 +399,6 @@ x,y = plotmakr(x,y,title,descr,calc)
 
 
 """
-
-gzsize = {}
-n = []
-for s in segments:
-	sl = []
-	for line in data:
-		if line[1] == s:
-			sl.append(line[10])
-	gzsize[s] = sum(sl)/len(sl)
-for i in range(1,len(segments)):
-	x.append(i)
-	y.append(gzsize[i]/gzsize[i+1])
-	n.append(gzsize[i]-gzsize[i+1])
-
-title = 'GZ size (X) / GZ size (X+1)'
-descr = 'size of GZ in embryos with X segments devided by size of GZ in embryos with X+1 segments '
-calc = 'total(data[10])_segment/total(data[10])_segment+1 by segments'
-y,y = plotmakr(x,y,title,descr,calc)
-
-title = 'GZ size (X) - GZ size (X+1)'
-descr = 'size of GZ in embryos with X segments minus size of GZ in embryos with X+1 segments '
-calc = 'total(data[10])_segment - total(data[10])_segment+1 by segments'
-x,n = plotmakr(x,n,title,descr,calc)
-
-'''
 ## PLOT: DELTA GZ ##
 ## (Upgrade: these three can be on one plot, different colour for each one)
 
@@ -449,8 +424,6 @@ readme.write("\n\n")
 ##is growth different between different segment additions?
 
 
-
-'''
 """
 
 readme.close()
