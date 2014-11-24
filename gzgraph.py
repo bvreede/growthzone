@@ -20,7 +20,7 @@ Specify input parameters: input/output folders and files.
 '''
 folder = "/home/barbara/Dropbox/shared_work/growthzone"
 data = "output.csv"
-outfolder = "plots_underconstruction"
+outfolder = "plots"
 readmefile = "README.txt"
 
 '''
@@ -426,27 +426,12 @@ calc = 'data[10]/data[6] by data[1]'
 x,y = plotmakr(x,y,title,descr,calc)
 
 
-
-
-
-"""
-## PLOT ##
-readme.write("\n")
-readme.write("\n\n")
-#10. segments per age
-
-## PLOT ##
-readme.write("\n")
-readme.write("\n\n")
-#11. delta segments per age
-"""
-
 readme.close()
 
 '''
 Notes for update:
-Error bars can be added with: plt.errorbar(x,y,yerr=e) where e is the matrix of error bars.
-
+- Error bars can be added with: plt.errorbar(x,y,yerr=e) where e is the matrix of error bars.
+- plots by age (plus: segments by age, and delta segments by age)
 '''
 
 
