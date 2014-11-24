@@ -363,6 +363,36 @@ title = 'segment area change post-formation'
 descr = 'change in the size of a segment as it transitions from being segment 1 to being segment 2'
 calc = 'avg(data[12]) in s / avg(data[11]) in s-1 by data[1]'
 x,y = plotmakr(x,y,title,descr,calc)
+
+
+## PLOT: IS GROWTH DIFFERENT BETWEEN SEGMENT ADDITIONS? ##
+## USE gzmatrix, fsmatrix calculated before
+## y = x + g where y = gz+first segment at t = 1; x = gz at t = 0; g = growth
+
+## on y axis: g = gz + seg1 at s=0 - gz at s=-1
+## for s = 2,3,4,5,6,7,8,9
+
+for n in range(2,len(segments)):
+	# get category n
+	x.append(n)
+	# get segment 1 in category n
+	for line in fsmatrix:
+		if line[0] == n:
+			segone = line[1]
+	# get gz in category n
+	# get gz in category n-1
+	for line in gzmatrix:
+		if line[0] == n:
+			gz = line[1]
+		elif line[0] == n-1:
+			gzprev = line[1]
+	# calculate growth: (gz+seg)t=0 - (gz)t=-1
+	y.append(gz+segone-gzprev)
+
+title = 'gz growth (gz + segment1 - gz in previous stage)'
+descr = 'growthzone + segment 1 minus growthzone in the previous segmental stage'
+calc = 'avg(data[11])+avg(data[10] in s - avg(data[10]) in s-1, by data[1]'
+x,y = plotmakr(x,y,title,descr,calc)
 			
 
 ## PLOT: GZ AREA DIVIDED BY LENGTH X WIDTH ##
@@ -398,15 +428,8 @@ x,y = plotmakr(x,y,title,descr,calc)
 
 
 
+
 """
-## PLOT: DELTA GZ ##
-## (Upgrade: these three can be on one plot, different colour for each one)
-
-
-#9a. delta GZ area by segment number (absolute size, not percentage)
-#9b. 1st segment area number by age
-#9c. 2nd segment area number by age
-
 ## PLOT ##
 readme.write("\n")
 readme.write("\n\n")
@@ -416,14 +439,6 @@ readme.write("\n\n")
 readme.write("\n")
 readme.write("\n\n")
 #11. delta segments per age
-
-## PLOT ##
-readme.write("\n")
-readme.write("\n\n")
-#12. y = x + g where y = gz+first segment at t = 1; x = gz at t = 0; g = growth
-##is growth different between different segment additions?
-
-
 """
 
 readme.close()
