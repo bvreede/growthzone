@@ -169,7 +169,7 @@ def plotmakr(x,y,title,descr,calc,xlab='segments'):
 	readme.write("%s:\t%s\n\t%s\n\t%s\n\n" %(name,title,descr,calc))
 
 	# plot the actual data
-	plt.plot(x,y,'y.') #optional for multiple plots in 1 fig: label='label'
+	plt.plot(x,y,'r.') #optional for multiple plots in 1 fig: label='label'
 	#plt.legend() #when applying a label
 	plt.savefig('%s/%s/%s-basic.svg' %(folder,outfolder,name)) #save the plot without the trendline
 	plt.savefig('%s/%s/%s-basic.png' %(folder,outfolder,name)) #also save a .png
@@ -393,6 +393,51 @@ title = 'gz growth (gz + segment1 - gz in previous stage)'
 descr = 'growthzone + segment 1 minus growthzone in the previous segmental stage'
 calc = 'avg(data[11])+avg(data[10] in s - avg(data[10]) in s-1, by data[1]'
 x,y = plotmakr(x,y,title,descr,calc)
+
+for n in range(2,len(segments)):
+	# get category n
+	x.append(n)
+	# get segment 1 in category n
+	for line in fsmatrix:
+		if line[0] == n:
+			segone = line[1]
+	# get gz in category n
+	# get gz in category n-1
+	for line in gzmatrix:
+		if line[0] == n:
+			gz = line[1]
+		elif line[0] == n-1:
+			gzprev = line[1]
+	# calculate growth: (gz+seg)t=0 - (gz)t=-1
+	y.append((gz+segone)/gzprev)
+
+### CHECK THE SCRIPTS BELOW!!! ###
+title = 'gz growth ((gz + segment1) / gz in previous stage)'
+descr = 'growthzone + segment 1 minus growthzone in the previous segmental stage'
+calc = '(avg(data[11])+avg(data[10] in s) / avg(data[10]) in s-1, by data[1]'
+x,y = plotmakr(x,y,title,descr,calc)
+
+for n in range(2,len(segments)):
+	# get category n
+	x.append(n)
+	# get segment 1 in category n
+	for line in fsmatrix:
+		if line[0] == n:
+			segone = line[1]
+	# get gz in category n
+	# get gz in category n-1
+	for line in gzmatrix:
+		if line[0] == n:
+			gz = line[1]
+		elif line[0] == n-1:
+			gzprev = line[1]
+	# calculate growth: (gz+seg)t=0 - (gz)t=-1
+	y.append(gz/(gzprev-segone))
+
+title = 'gz growth ( gz / (gz in prev stage - segment1))'
+descr = 'growthzone + segment 1 minus growthzone in the previous segmental stage'
+calc = ' avg(data[10] in s) / (avg(data[10] in s-1)-avg(data[11] in s), by data[1]'
+x,y = plotmakr(x,y,title,descr,calc)
 			
 
 ## PLOT: GZ AREA DIVIDED BY LENGTH X WIDTH ##
@@ -432,6 +477,7 @@ readme.close()
 Notes for update:
 - Error bars can be added with: plt.errorbar(x,y,yerr=e) where e is the matrix of error bars.
 - plots by age (plus: segments by age, and delta segments by age)
+- split up part that calculates average with part that makes plots
 '''
 
 
