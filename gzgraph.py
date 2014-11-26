@@ -19,7 +19,7 @@ Specify input parameters: input/output folders and files.
 
 '''
 folder = "/home/barbara/Dropbox/shared_work/growthzone"
-data = "output.csv"
+infile = "gzdata_noheaders.csv"
 outfolder = "plots"
 readmefile = "README.txt"
 
@@ -32,56 +32,28 @@ else:
 	os.system("mkdir %s/%s" %(folder,outfolder))
 readme = open("%s/%s/%s" %(folder,outfolder,readmefile), "w")
 
-'''
-Read input file and import the data to memory.
-This works with a flat csv table with the columns in the following order:
-- [unspecified]
-- developmental time window (e.g. '50-52')
-- segment number (e.g. '3'); must be an integer
-- measurement count (for a total of 3 measurements per image); must be 1, 2, or 3
-- [n measurements; must be floats]
-'''
-csvdata = csv.reader(open("%s/%s" %(folder,data)))
-devt_time = []
-segments = []
-temp = [] #temporary dataset: collects the three measurements done on each image, before averaging
-data = [] #the final dataset, with measurements averaged
-for line in csvdata:
-	#get devt_time categories
-	devt_time.append(line[1])
-	#get segment number categories
-	try:
-		segments.append(int(line[2])) #only append values that can be integers to segment number list
-	except ValueError:
-		continue
-	#get measurements 1-3 per image.
-	if (line[3] == '1') or (line[3] == '2'): #save the first two measurement entries of a photo
-		temp.append(line)
-	elif line[3] == '3': #the third and final measurement entry of the photo
-		temp.append(line)
-		#test if three measurements are from the same image
-		if temp[0][0] != temp[1][0] or temp[1][0] != temp[2][0]:
-			print "Error: measurements not in order on image" + line[0]
-			break
-		#test if there are three measurements in total.
-		if len(temp) != 3:
-			print "Error: total measurements on photo %s is not 3. Adjust script or measurements; results invalid." %line[0]
-			break
-		td = [line[1],int(line[2])] # enter the age bracket and segment number to the dataset
-		for i in range(4,len(temp[0])): #for all measured parameters:
-			try:
-				k = [float(temp[0][i]),float(temp[1][i]),float(temp[2][i])]
-			except ValueError: #this happens if there are no measurement entries; in that case the value is 0 for each measurement
-				k = [0.0,0.0,0.0]
-			d = sum(k)/3
-			td.append(d)
-		data.append(td)	
-		temp = []
 
-devt_time = list(set(devt_time[1:])) #make a list of unique 'devt_time' entries, except the header
-segments = list(set(segments)) #make a list of unique 'segments' entries
-devt_time.sort()
-segments.sort()
+'''
+Read data & write 'data' db, and 'segments' and 'age' lists
+'''
+csvin = csv.reader(open("%s/%s" %(folder,infile)))
+
+data = []
+segments = []
+age = []
+for line in csvin:
+	addlist = []
+	for a in range(len(line)):
+		if a <= 1:
+			addlist.append(int(line[a]))
+		else:
+			addlist.append(float(line[a]))
+	data.append(addlist)
+	age.append(int(line[0]))
+	segments.append(int(line[1]))
+
+age = list(set(age))
+segments = list(set(segments))
 
 '''
 module that calculates data averages and standard deviations.
