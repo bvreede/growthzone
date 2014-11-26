@@ -29,6 +29,7 @@ This works with a flat csv table with the columns in the following order:
 - segment number (e.g. '3'); must be an integer
 - measurement count (for a total of 3 measurements per image); must be 1, 2, or 3
 - [n measurements; must be floats]
+Do check the 'data explained' bit, for info that goes onto headers, etc.
 '''
 csvdata = csv.reader(open("%s/%s" %(folder,data)))
 devt_time = []
@@ -93,7 +94,7 @@ for k in devt_time:
 ## a9/[10]:\tThe area of the growthzone up to the first stripe\n")
 ## a10/[11]:\tThe area of the growthzone between the first and second stripe\n")
 ## a11/[12]:\tThe area of the growthzone between the second and third stripe\n\n")
-mlabels = ['age','segments','growthzone width','stripe 1 width','stripe 2 width', 'stripe 3 width', 'growthzone length', 'growthzone top half length','1st segment length','2nd segment length','growthzone area','1st segment area','2nd segment area']
+mlabels = ['age (in hrs)','segments','growthzone width','stripe 1 width','stripe 2 width', 'stripe 3 width', 'growthzone length', 'growthzone top half length','1st segment length','2nd segment length','growthzone area','1st segment area','2nd segment area']
 
 
 '''
