@@ -42,12 +42,13 @@ data = []
 segments = []
 age = []
 for line in csvin:
+	# start a list to collect all the info in the correct format
 	addlist = []
 	for a in range(len(line)):
 		if a <= 1:
-			addlist.append(int(line[a]))
+			addlist.append(int(line[a])) # first two are categories; int not float
 		else:
-			addlist.append(float(line[a]))
+			addlist.append(float(line[a])) # all measurements are floats.
 	data.append(addlist)
 	age.append(int(line[0]))
 	segments.append(int(line[1]))
@@ -383,9 +384,8 @@ for n in range(2,len(segments)):
 	# calculate growth: (gz+seg)t=0 - (gz)t=-1
 	y.append((gz+segone)/gzprev)
 
-### CHECK THE SCRIPTS BELOW!!! ###
-title = 'gz growth ((gz + segment1) / gz in previous stage)'
-descr = 'growthzone + segment 1 minus growthzone in the previous segmental stage'
+title = 'growth  ((gz + segment1) / gz in previous stage)'
+descr = 'growth in percentagegrowthzone + segment 1 divided by growthzone in the previous segmental stage'
 calc = '(avg(data[11])+avg(data[10] in s) / avg(data[10]) in s-1, by data[1]'
 x,y = plotmakr(x,y,title,descr,calc)
 
@@ -407,7 +407,7 @@ for n in range(2,len(segments)):
 	y.append(gz/(gzprev-segone))
 
 title = 'gz growth ( gz / (gz in prev stage - segment1))'
-descr = 'growthzone + segment 1 minus growthzone in the previous segmental stage'
+descr = ''
 calc = ' avg(data[10] in s) / (avg(data[10] in s-1)-avg(data[11] in s), by data[1]'
 x,y = plotmakr(x,y,title,descr,calc)
 			
@@ -449,7 +449,6 @@ readme.close()
 Notes for update:
 - Error bars can be added with: plt.errorbar(x,y,yerr=e) where e is the matrix of error bars.
 - plots by age (plus: segments by age, and delta segments by age)
-- split up part that calculates average with part that makes plots
 '''
 
 
