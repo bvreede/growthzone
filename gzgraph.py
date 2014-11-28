@@ -443,6 +443,16 @@ calc = 'data[10]/data[6] by data[1]'
 x,y = plotmakr(x,y,title,descr,calc)
 
 
+## PLOT: AGE BY SEGMENTS ##
+for line in data:
+	y.append(line[0])
+	x.append(line[1])
+
+title = 'Age by segments'
+descr = 'Age in hours by segment (stripe) number'
+calc = 'data[0] by data[1]'
+x,y = plotmakr(x,y,title,descr,calc)
+
 readme.close()
 
 '''
