@@ -110,7 +110,7 @@ mlabels = ['age','segments','growthzone width','stripe 1 width','stripe 2 width'
 ### HOW TO MAKE THE PLOTS ###
 plotcount = 0
 
-def plotmakr(x,y,title,descr,calc,xlab='segments'):
+def plotmakr(x,y,title,descr,calc,xlab='segments',xran=[0,10]):
 	# calculate the averages:
 	xavg = list(set(x)) #collect all distinct x values in the dataset
 	xavg.sort()
@@ -131,7 +131,7 @@ def plotmakr(x,y,title,descr,calc,xlab='segments'):
 	plt.figure()
 	plt.xlabel(xlab)
 	#plt.ylabel(ylab)
-	plt.xlim([0,10])
+	plt.xlim(xran)
 	#plt.ylim([0,4])
 	plt.title(title)
 
@@ -148,7 +148,7 @@ def plotmakr(x,y,title,descr,calc,xlab='segments'):
 	plt.savefig('%s/%s/%s-basic.png' %(folder,outfolder,name)) #also save a .png
 
 	# calculate and plot the trendline/average
-	z = numpy.polyfit(xavg, yavg, 6) #calculate trendline as 6-degree polynomial
+	z = numpy.polyfit(xavg, yavg, len(xavg)-1) #calculate trendline as n-degree polynomial where n < number of x categories
 	p = numpy.poly1d(z)
 	plt.plot(xavg,p(xavg),"k--")
 	plt.plot(xavg,yavg,'ko')
@@ -161,7 +161,7 @@ def plotmakr(x,y,title,descr,calc,xlab='segments'):
 	plt.figure()
 	plt.xlabel(xlab)
 	#plt.ylabel(ylab)
-	plt.xlim([0,10])
+	plt.xlim(xran) # no idea why, but this does not seem to work! boxplot finds its own limits.
 	#plt.ylim([0,4])
 	plt.title(title)
 	plt.boxplot(y_bp)
@@ -174,7 +174,7 @@ def plotmakr(x,y,title,descr,calc,xlab='segments'):
 
 ### PLOTS ###
 
-## basic measurement plots ##
+## basic measurement plots by segments##
 x,y=[],[]
 
 for i in range(2,len(data[0])):
@@ -187,6 +187,19 @@ for i in range(2,len(data[0])):
 	descr = '%s in the different segmental stages' %mlabels[i]
 	calc = 'data[%s] by data[1]' %i
 	x,y = plotmakr(x,y,title,descr,calc)
+
+
+## basic measurement plots by age##
+for i in range(2,len(data[0])):
+	for line in data:
+		if line[i] == 0.0:
+			continue
+		y.append(line[i])
+		x.append(line[0])
+	title = mlabels[i]
+	descr = '%s in the different age groups' %mlabels[i]
+	calc = 'data[%s] by data[0]' %i
+	x,y = plotmakr(x,y,title,descr,calc,'age (in h)',[44,56])
 	
 
 ## PLOT: GZ WIDTH/GZ LENGTH ##
@@ -443,22 +456,34 @@ calc = 'data[10]/data[6] by data[1]'
 x,y = plotmakr(x,y,title,descr,calc)
 
 
-## PLOT: AGE BY SEGMENTS ##
+## PLOT: SEGMENTS BY AGE ##
 for line in data:
-	y.append(line[0])
-	x.append(line[1])
+	y.append(line[1])
+	x.append(line[0])
 
-title = 'Age by segments'
-descr = 'Age in hours by segment (stripe) number'
-calc = 'data[0] by data[1]'
-x,y = plotmakr(x,y,title,descr,calc)
+title = 'Segments'
+descr = 'Segment (stripe) number by age'
+calc = 'data[1] by data[0]'
+x,y = plotmakr(x,y,title,descr,calc,'age (in h)',[44,56])
+
+
+## PLOT: DELTA SEGMENTS BY AGE ##
+segmatrix = avgmatrix(0,1)
+
+for i in range(1,len(segmatrix)):
+	x.append(segmatrix[i][0])
+	y.append(segmatrix[i][1]-segmatrix[i-1][1])
+
+title = 'Stripes added (in 2 hours)'
+descr = 'Segments (stripes) added in a 2 hour window, by age'
+calc = 'delta(data[1]) by data[0]'
+x,y = plotmakr(x,y,title,descr,calc,'age (in h)',[44,56])
 
 readme.close()
 
 '''
 Notes for update:
 - Error bars can be added with: plt.errorbar(x,y,yerr=e) where e is the matrix of error bars.
-- plots by age (plus: segments by age, and delta segments by age)
 '''
 
 
