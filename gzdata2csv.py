@@ -73,6 +73,7 @@ segments = list(set(segments)) #make a list of unique 'segments' entries
 segments.sort()
 
 #organize all ages into a dictionary (number as key; category as value)
+#nb, this is not used at the moment, but can be at a later stage
 devt_time = list(set(devt_time[1:])) #make a list of unique 'devt_time' entries, except the header
 devt_time.sort()
 agedict = {}
