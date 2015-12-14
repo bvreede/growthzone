@@ -71,35 +71,35 @@ for img in filelist:
 				print "not all area measurements done for", img
 				break
 		outputdb.write("%s.%s,%s,%s,%s," %(img,jpgdict[img],img[:5],segm,i))# collect image filename to measurement number
-		w1 = float(length[1].split()[8])/cr #8th item depends on formatting imagej! pay attention!
+		w1 = float(length[1].split()[8])*cr #8th item depends on formatting imagej! pay attention!
 		if segm == 0:
 			w2=w3=w4=l5=l7=l8=a1=a2=a3=""
-			l6 = float(length[2].split()[8])/cr
+			l6 = float(length[2].split()[8])*cr
 		elif segm == 1:
 			w3=w4=l7=l8=a2=a3=""
-			w2=float(length[2].split()[8])/cr
-			l5=float(length[3].split()[8])/cr
-			l6=float(length[4].split()[8])/cr
-			a1=float(area[1].split()[2])/(cr*cr)
+			w2=float(length[2].split()[8])*cr
+			l5=float(length[3].split()[8])*cr
+			l6=float(length[4].split()[8])*cr
+			a1=float(area[1].split()[2])*(cr*cr)
 		elif segm == 2:
 			w4=l8=a3=""
-			w2=float(length[2].split()[8])/cr
-			w3=float(length[3].split()[8])/cr
-			l5=float(length[4].split()[8])/cr
-			l6=float(length[5].split()[8])/cr
-			l7=float(length[6].split()[8])/cr
-			a1=float(area[1].split()[2])/(cr*cr)
-			a2=float(area[2].split()[2])/(cr*cr)
+			w2=float(length[2].split()[8])*cr
+			w3=float(length[3].split()[8])*cr
+			l5=float(length[4].split()[8])*cr
+			l6=float(length[5].split()[8])*cr
+			l7=float(length[6].split()[8])*cr
+			a1=float(area[1].split()[2])*(cr*cr)
+			a2=float(area[2].split()[2])*(cr*cr)
 		else:
-			w2=float(length[2].split()[8])/cr
-			w3=float(length[3].split()[8])/cr
-			w4=float(length[4].split()[8])/cr
-			l5=float(length[5].split()[8])/cr
-			l6=float(length[6].split()[8])/cr
-			l7=float(length[7].split()[8])/cr
-			l8=float(length[8].split()[8])/cr
-			a1=float(area[1].split()[2])/(cr*cr)
-			a2=float(area[2].split()[2])/(cr*cr)
-			a3=float(area[3].split()[2])/(cr*cr)
+			w2=float(length[2].split()[8])*cr
+			w3=float(length[3].split()[8])*cr
+			w4=float(length[4].split()[8])*cr
+			l5=float(length[5].split()[8])*cr
+			l6=float(length[6].split()[8])*cr
+			l7=float(length[7].split()[8])*cr
+			l8=float(length[8].split()[8])*cr
+			a1=float(area[1].split()[2])*(cr*cr)
+			a2=float(area[2].split()[2])*(cr*cr)
+			a3=float(area[3].split()[2])*(cr*cr)
 		outputdb.write("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" %(w1,w2,w3,w4,l5,l6,l7,l8,a1,a2,a3))
 	#collect averages: how about a list and then averaging its items?
