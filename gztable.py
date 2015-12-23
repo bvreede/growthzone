@@ -1,4 +1,5 @@
 import os
+import numpy as np
 
 folder = "/home/barbara/Dropbox/shared_work/growthzone/"
 msfile = "temp/"
@@ -50,12 +51,20 @@ removeset = set(removelist) # removes duplicates
 for rem in removeset:
 	filelist.remove(rem) # chuck all items that have incomplete measurements
 
+#prepare lists for averages and standarddev
+name_meas = ['w1','w2','w3','w4','l5','l6','l7','l8','a1','a2','a3']
+collect_meas = [[[] for x in range(9)] for m in name_meas]
+mean_meas = [['' for x in range(9)] for m in name_meas]
+var_meas = [['' for x in range(9)] for m in name_meas]
+
+
 '''
 read individual files to produce one output file
 with all measurements as well as averages.
 '''
 outputdb.write("filename,devt_time,segments,repeat,w1,w2,w3,w4,l5,l6,l7,l8,a1,a2,a3\n")
 for img in filelist:
+	cur_meas = [[] for m in name_meas]
 	metafile = open("%s%s%s.%s_meta.txt" %(folder,msfile,img,jpgdict[img]))
 	meta = metafile.readlines()
 	segm = int(meta[1].strip().split()[1]) # takes 2nd line, 2nd element of meta file: segment number
@@ -102,4 +111,30 @@ for img in filelist:
 			a2=float(area[2].split()[2])*(cr*cr)
 			a3=float(area[3].split()[2])*(cr*cr)
 		outputdb.write("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" %(w1,w2,w3,w4,l5,l6,l7,l8,a1,a2,a3))
-	#collect averages: how about a list and then averaging its items?
+		for k,measurement in enumerate((w1,w2,w3,w4,l5,l6,l7,l8,a1,a2,a3)):#iterate through measurements and add them to the list
+			if measurement == "": #empty measurement, don't add it
+				continue
+			cur_meas[k].append(measurement)
+	#now add the average to the collection of averages at the right stage
+	for n,mlist in enumerate(cur_meas):
+		stage = segm-1 #the ID in the list is the number of stripes minus one (because it starts counting at 0, obv)
+		if mlist == []: #empty measurement, don't add anything
+			continue
+		am = np.mean(mlist)
+		collect_meas[n][stage].append(am)
+
+#now add the averages and variances to the appropriate lists
+for m in range(len(name_meas)): #m is the measurement
+	for s in range(9): #s is the stage
+		if collect_meas[m][s]==[]:
+			continue
+		mean=np.mean(collect_meas[m][s])
+		var=np.var(collect_meas[m][s])
+		mean_meas[m][s]=mean
+		var_meas[m][s]=var
+
+for n,name in enumerate(name_meas):
+	print name
+	for k in range(9):
+		print "stage:", k+1, mean_meas[n][k],var_meas[n][k]
+
