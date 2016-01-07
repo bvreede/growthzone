@@ -1,7 +1,7 @@
 import csv
 
 cr=csv.reader(open("/home/barbara/Dropbox/oncopeltus/playground/gzdata.csv"))
-out = open("/home/barbara/Dropbox/shared_work/growthzone/pandasdata.csv", "w")
+out = open("/home/barbara/Dropbox/shared_work/growthzone/pandasdata-onlygz.csv", "w")
 
 #write headers to outfile
 out.write("Stage,Item,Width,Length,Area\n")
@@ -63,6 +63,7 @@ for line in cr:
 	l = line[6]
 	a = line[10]
 	writeinfo(seg,itID,w,l,a) # write info to file
+	continue
 	# then assess first seg
 	itID = stripeID['1' + seg]
 	w = line[3]
