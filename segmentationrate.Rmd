@@ -1,0 +1,580 @@
+---
+title: "Growthzone calculations"
+author: "Barbara Vreede"
+date: "12/6/2016"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Segmentation rate
+
+We have new data from the lab, scoring segment numbers at various ages, every hour from 45-56 hours after egg lay. First, we need to load the data from its original file, and modify it so we can use it for analysis.
+```{r load data}
+
+source <- read.csv("/Users/BarbaraMaria/Dropbox/projects/2014_Ofas-measurements/segmentation_postreview/segment_counte.csv",header=T)
+source[1] <- NULL #remove first column with ascending numbers
+```
+
+Generate a clean table from the source data:
+```{r make table}
+
+# create variables to be filled or used
+k <- 2
+ages.all <- NULL
+stages.all <- NULL
+n.all <- NULL
+
+for (i in 45:56){
+  #extract and modify data
+  stages <- source[k,] #slice the dataframe to the appropriate row
+  stages <- stages[!is.na(stages)] #remove NA values
+  ages <- rep(i, length(stages)) #generate data for the 'age' column
+  
+  #append ages and stages to larger vectors
+  ages.all <- c(ages.all, ages)
+  stages.all <- c(stages.all, stages)
+  
+  #to ensure next time a new slice will be taken
+  k <- k+1
+  
+  #add data to check the smallest n
+  n.all <- c(n.all, length(ages))
+}
+
+#combine to a new dataframe
+gz.data <- data.frame(ages.all,stages.all)
+colnames(gz.data) <- c("age","stage")
+
+#determine the smallest number of embryos per age group
+smallest_n <- min(n.all)
+```
+
+
+
+This is what the table looks like (first few rows only):
+```{r, echo=FALSE}
+#print the head of the new data frame
+knitr::kable(head(gz.data))
+```
+
+Save the clean dataset as supplementary file 1C:
+
+```{r}
+write.csv(gz.data, file="segmentationdata.csv",row.names=F)
+```
+
+I don't know how to do this in R right this second, so a dirty fix with python: adding an extra column where the ages are written as brackets.
+
+```{python}
+import csv
+temporaryfix = csv.reader(open("/Users/BarbaraMaria/Dropbox/projects/2014_Ofas-measurements/segmentation_postreview/segmentationdata.csv"))
+tempout = open("/Users/BarbaraMaria/Dropbox/projects/2014_Ofas-measurements/segmentation_postreview/segmentationdata_agebrack.csv", "w")
+for line in temporaryfix:
+  stage = line[1]
+  age = line[0]
+  try:
+    bracket = "%s-%s" %(str(int(line[0])-1),line[0])
+  except ValueError:
+    bracket = "Age_bracket"
+    stage = "Segments"
+    age = "Age"
+  tempout.write("%s,%s,%s\n" %(bracket,age,stage))
+tempout.close()
+```
+
+With the clean table of all new data now constructed, we need to select equal numbers of embryos from each timepoint. The smallest sample in a single timepoint is `r smallest_n`, so from every timepoint, `r smallest_n` embryos will be randomly selected.
+
+Building on the assumptions that (1) segmentation is linear, and (2) our total sample is randomly distributed over time (resulting from randomly sampling equal numbers of embryos from each timepoint), there should be an equal number of embryos representing each stage.
+
+Thus, we can now determine whether our data are able to reject a linear segmentation rate under these assumptions. We use a chi-squared test for this, and only select stages 2-8, as our timepoints are unlikely to contain the beginning of stage 1 and end of stage 9.
+
+This does mean that any results from this test only concern segmentation rate *from stage 2 through to 8*.
+
+```{r analyse}
+chcollect <- NULL #collection for chi-squared p-values.
+tt <- NULL #table to be filled with n embryos per stage
+ch <- NULL #to be filled with chisquare results
+
+#run the analysis multiple times, because sampling might be different each time.
+runtotal <- 1000 #the number of times the analysis will be run.
+
+for (k in 1:runtotal){
+  # make a selection of samples so that each timepoint contains the same number of samples
+  equi.samples <- NULL
+
+  for (i in 45:56){
+   add.sample <- sample(gz.data[gz.data$age == i,]$stage, smallest_n)
+   equi.samples <- c(equi.samples,add.sample)
+  }
+  
+  #construct a table counting the number of embryos in each stage 
+  tt <- table(equi.samples)
+  #use chisquare to test whether this table deviates from an equal distribution
+  ch <- chisq.test(tt[2:8])
+  #add the pvalue to the collection
+  chcollect <- c(chcollect,ch[[3]])
+}
+```
+
+Every time the analysis was run, a table was constructed, like the following:
+```{r, echo=FALSE}
+tt
+```
+The analysis on this table took into account only stage 2 through 8:
+```{r, echo=FALSE}
+tt[2:8]
+```
+
+The chi-squared test results for this table are:
+```{r, echo=FALSE}
+ch
+```
+
+The sampling and subsequent analysis has occurred `r runtotal` times. All the chi-squared results are summarized in this histogram:
+
+```{r histogram, echo=FALSE}
+#make a histogram with the collected p-values
+hist(chcollect, col="grey",xlab="p values",main="Outcome of sampled X2 trials")
+```
+
+In conclusion, our data does not reject a linear segmentation rate.
+
+## Visualize the segmentation rate data
+First, turn every age category into the average age for that category by subtracting 0.5h.
+```{r age modification}
+gz.data$age <- gz.data$age - 0.5
+
+```
+
+Then plot the embryos' stages by their age groups, and do a regression analysis.
+```{r plot age by stage}
+#png(file="stage_by_age.png",width=1000,height=700,res=140)
+plot(gz.data$stage ~ jitter(gz.data$age, 0.5), ylab = "stage", xlab="age (in h)", ylim = c(1,9), pch=20, axes=F, cex=0.8)
+axis(side=1, at=c(44:56))
+axis(side=2, at=c(1:9), las=1)
+
+#regression analysis: generate the regression line, plot it, and show a statistics summary.
+reg1 <- lm(gz.data$stage~gz.data$age)
+abline(reg1, col="darkred")
+#dev.off()
+summary(reg1)
+```
+
+
+
+## Growth of individual segments
+Figure 1 of the paper shows that segments grow in length but not in width. But this is not tested statistically, so let's do that.
+
+Import the data.
+```{r import measurement data}
+gz.meas <- read.csv("/Users/BarbaraMaria/Dropbox/projects/2014_Ofas-measurements/segmentation_postreview/supplement1B.csv",header=T)
+```
+
+Set up functions to (1) select data (separate for four categories: width of ultimate and penultimate 
+segment; length; and area), and (2) perform anovas and return the resulting p-value.
+
+```{r anova functions}
+# function that takes a dataframe with 'size' (quantitative data) and 'stage' (categorical data)
+# returning the pvalue of a one-way anova.
+anova.to.pval <- function(simpledb){
+  fit <- lm(size ~ stage, data=simpledb)
+  anova.temp <- anova(fit)
+  pval <- anova.temp[5][1,] #extracts only the pvalue from the anova
+  direction <- coef(fit)[[2]] #extracts the direction of change from the linear model
+  return(c(pval,direction))
+}
+
+select_width1 <- function(n){
+  #select data for the width of the latest segment in stage n
+  width_n <- gz.meas[gz.meas$segments == n,]$stripe.1.width
+  #generate appropriate category data
+  cat_n <- rep(n,length(width_n))
+  #select data for the width of the penultimate segment, one stage later
+  width_m <- gz.meas[gz.meas$segments == n+1,]$stripe.2.width
+  #generate appropriate category data
+  cat_m <- rep(n+1,length(width_m))
+  #construct the dataframe by first glueing columns together and then making the df
+  size <- c(width_n,width_m)
+  stage <- c(cat_n,cat_m)
+  data.temp <- data.frame(size,stage)
+  return(data.temp)
+}
+
+select_width2 <- function(n){
+  #select data for the width of the penultimate segment in stage n
+  width_m <- gz.meas[gz.meas$segments == n,]$stripe.2.width
+  #generate appropriate category data
+  cat_m <- rep(n,length(width_m))
+  #select data for the width of the 2nd to last segment in stage n+1
+  width_l <- gz.meas[gz.meas$segments == n+1,]$stripe.3.width
+  #generate appropriate category data
+  cat_l <- rep(n+1,length(width_l))
+  #construct the dataframe by first glueing columns together and then making the df
+  size <- c(width_m,width_l)
+  stage <- c(cat_m,cat_l)
+  data.temp <- data.frame(size,stage)
+  return(data.temp)
+}
+
+select_length <- function(n){
+  #select data for the length of the penultimate segment in stage n
+  length_n <- gz.meas[gz.meas$segments == n,]$X1st.segment.length
+  #generate appropriate category data
+  cat_n <- rep(n,length(length_n))
+  #select data for the width of the 2nd to last segment in stage n+1
+  length_m <- gz.meas[gz.meas$segments == n+1,]$X2nd.segment.length
+  #generate appropriate category data
+  cat_m <- rep(n+1,length(length_m))
+  #construct the dataframe by first glueing columns together and then making the df
+  size <- c(length_n,length_m)
+  stage <- c(cat_n,cat_m)
+  data.temp <- data.frame(size,stage)
+  return(data.temp)
+}
+
+select_area <- function(n){
+  #select data for the length of the penultimate segment in stage n
+  area_n <- gz.meas[gz.meas$segments == n,]$X1st.segment.area
+  #generate appropriate category data
+  cat_n <- rep(n,length(area_n))
+  #select data for the width of the 2nd to last segment in stage n+1
+  area_m <- gz.meas[gz.meas$segments == n+1,]$X2nd.segment.area
+  #generate appropriate category data
+  cat_m <- rep(n+1,length(area_m))
+  #construct the dataframe by first glueing columns together and then making the df
+  size <- c(area_n,area_m)
+  stage <- c(cat_n,cat_m)
+  data.temp <- data.frame(size,stage)
+  return(data.temp)
+}
+
+select_width_gz <- function(n){
+  #select data for the width of the growthzone in stage n
+  width_n <- gz.meas[gz.meas$segments == n,]$growthzone.width
+  #generate appropriate category data
+  cat_n <- rep(1,length(width_n))
+  #select data for the width of the growthzone, one stage later
+  width_m <- gz.meas[gz.meas$segments == n+1,]$growthzone.width
+  #generate appropriate category data
+  cat_m <- rep(2,length(width_m))
+  #construct the dataframe by first glueing columns together and then making the df
+  size <- c(width_n,width_m)
+  stage <- c(cat_n,cat_m)
+  data.temp <- data.frame(size,stage)
+  return(data.temp)
+}
+
+select_length_gz <- function(n){
+  #select data for the length of the penultimate segment in stage n
+  length_n <- gz.meas[gz.meas$segments == n,]$growthzone.length
+  #generate appropriate category data
+  cat_n <- rep(2,length(length_n))
+  #select data for the width of the 2nd to last segment in stage n+1
+  length_m <- gz.meas[gz.meas$segments == n+1,]$growthzone.length
+  #generate appropriate category data
+  cat_m <- rep(3,length(length_m))
+  #construct the dataframe by first glueing columns together and then making the df
+  size <- c(length_n,length_m)
+  stage <- c(cat_n,cat_m)
+  data.temp <- data.frame(size,stage)
+  return(data.temp)
+}
+
+select_area_gz <- function(n){
+  #select data for the length of the penultimate segment in stage n
+  area_n <- gz.meas[gz.meas$segments == n,]$growthzone.area
+  #generate appropriate category data
+  cat_n <- rep(2,length(area_n))
+  #select data for the width of the 2nd to last segment in stage n+1
+  area_m <- gz.meas[gz.meas$segments == n+1,]$growthzone.area
+  #generate appropriate category data
+  cat_m <- rep(3,length(area_m))
+  #construct the dataframe by first glueing columns together and then making the df
+  size <- c(area_n,area_m)
+  stage <- c(cat_n,cat_m)
+  data.temp <- data.frame(size,stage)
+  return(data.temp)
+}
+```
+
+Now apply these functions to multiple stages:
+
+```{r fill anova table}
+gz.anova <- NULL
+
+for(i in 1:8){
+  #width change ultimate segment
+  wd1 <- select_width1(i)
+  ar1 <- anova.to.pval(wd1)
+  #width change penultimate segment; length change ultimate segment; area change ultimate segment
+  if(i == 1){
+    ar2 <- c(NA,NA)
+    ar3 <- c(NA,NA)
+    ar4 <- c(NA,NA)
+  }
+  else{
+    wd2 <- select_width2(i)
+    ar2 <- anova.to.pval(wd2)
+    ld <- select_length(i)
+    ar3 <- anova.to.pval(ld)
+    ad <- select_area(i)
+    ar4 <- anova.to.pval(ad)
+  }
+
+  #growth zone width, length, area
+  gw <- select_width_gz(i)
+  argw <- anova.to.pval(gw)
+  gl <- select_length_gz(i)
+  argl <- anova.to.pval(gl)
+  ga <- select_area_gz(i)
+  arga <- anova.to.pval(ga)
+  gz.anova <- rbind(gz.anova, c(ar1,ar2,ar3,ar4,argw,argl,arga))
+  gz.anova <- data.frame(gz.anova) #shouldnt this be outside the loop?
+}
+colnames(gz.anova) <- c("segment_width1_pval","segment_width1,dir", "segment_width2_pval","segment_width2_dir","segment_length_pval","segment_length_dir","segment_area_pval","segment_area_dir","growthzone_width_pval","growthzone_width_dir","growthzone_length_pval","growthzone_length_dir","growthzone_area_pval","growthzone_area_dir")
+```
+
+Select pvalues and construct a heatmap with specific breaks: p-values between 0-0.001 are dark red; p-values between 0.001-0.01 are red; p-values between 0.01-0.05 are orange; anything above 0.05 is yellow or khaki (above 0.1).
+
+
+```{r}
+gz.pvals <- gz.anova[,grep('pval',names(gz.anova),value=TRUE)]
+
+library(gplots)
+breaks = c(0,0.001,0.01,0.05,0.1,1)
+col = c("darkred","red","orange","gold","khaki")
+heatmap.2(as.matrix(t(gz.pvals)), breaks=breaks, col=col,dendrogram='none',trace='none',Rowv=F,Colv=F,key=F,cexRow=0.6)
+
+```
+
+
+## Multiple comparisons
+On second thought, this does not control for multiple comparisons. R knows functions with which to do this properly, the R book suggests TukeyHSD and pairwise.t.test, though it is tricky to apply to the data, because comparisons are not straightforward (i.e. comparisons need to be made between parameters: 2nd stripe from stage 3 to 3rd stripe from stage 4, etc), and not everything needs to be compared to everything, technically.
+
+The situation is not that complicated for growthzone width, length, and area:
+
+```{r multiple comparisons growthzone}
+# ensure "segments" is a factor
+gz.meas$segments <- as.factor(gz.meas$segments)
+
+#LENGTH
+gzlen.model <- aov(growthzone.length ~ segments, data=gz.meas)
+TukeyHSD(gzlen.model)
+#pairwise.t.test(gz.meas$growthzone.length,gz.meas$segments)
+
+#WIDTH
+gzwid.model <- aov(growthzone.width ~ segments, data=gz.meas)
+#TukeyHSD(gzwid.model)
+
+#AREA
+gzarea.model <- aov(growthzone.area ~ segments, data=gz.meas)
+#TukeyHSD(gzarea.model)
+```
+
+A more difficult situation is that for the segments. We need to construct new databases first, and categorize the measurements with information both on the measurement type (1st, 2nd, 3rd segment), and the stage.
+
+```{r}
+gz.meas.segwid <- NULL
+gz.meas.seglen <- NULL
+gz.meas.segare <- NULL
+
+select_widths <- function(n){
+  #select data for the width of the latest segment in stage n
+  width_n <- gz.meas[gz.meas$segments == n,]$stripe.1.width
+  #generate appropriate category data
+  cat_n <- rep(paste(n,"stripe1",sep="_"),length(width_n))
+  #select data for the width of the penultimate segment
+  width_m <- gz.meas[gz.meas$segments == n,]$stripe.2.width
+  #generate appropriate category data
+  cat_m <- rep(paste(n,"stripe2",sep="_"),length(width_m))
+  #select data for the width of the third segment
+  width_o <- gz.meas[gz.meas$segments == n,]$stripe.3.width
+  #generate appropriate category data
+  cat_o <- rep(paste(n,"stripe3",sep="_"),length(width_m))
+  #construct the dataframe by first glueing columns together and then making the df
+  size <- c(width_n,width_m,width_o)
+  stage <- c(cat_n,cat_m,cat_o)
+  data.temp <- data.frame(size,stage)
+  return(data.temp)
+}
+
+select_lengths <- function(n){
+  #select data for the length of the latest segment in stage n
+  length_n <- gz.meas[gz.meas$segments == n,]$X1st.segment.length
+  #generate appropriate category data
+  cat_n <- rep(paste(n,"seg1",sep="_"),length(length_n))
+  #select data for the length of the penultimate segment
+  length_m <- gz.meas[gz.meas$segments == n,]$X2nd.segment.length
+  #generate appropriate category data
+  cat_m <- rep(paste(n,"seg2",sep="_"),length(length_m))
+  #construct the dataframe by first glueing columns together and then making the df
+  size <- c(length_n,length_m)
+  stage <- c(cat_n,cat_m)
+  data.temp <- data.frame(size,stage)
+  return(data.temp)
+}
+
+select_areas <- function(n){
+  #select data for the length of the latest segment in stage n
+  area_n <- gz.meas[gz.meas$segments == n,]$X1st.segment.area
+  #generate appropriate category data
+  cat_n <- rep(paste(n,"seg1",sep="_"),length(area_n))
+  #select data for the area of the penultimate segment
+  area_m <- gz.meas[gz.meas$segments == n,]$X2nd.segment.area
+  #generate appropriate category data
+  cat_m <- rep(paste(n,"seg2",sep="_"),length(area_m))
+  #construct the dataframe by first glueing columns together and then making the df
+  size <- c(area_n,area_m)
+  stage <- c(cat_n,cat_m)
+  data.temp <- data.frame(size,stage)
+  return(data.temp)
+}
+
+for(i in 1:8){
+  wd <- select_widths(i)
+  gz.meas.segwid <- rbind.data.frame(gz.meas.segwid,wd)
+  ln <- select_lengths(i)
+  gz.meas.seglen <- rbind.data.frame(gz.meas.seglen,ln)
+  ar <- select_areas(i)
+  gz.meas.segare <- rbind.data.frame(gz.meas.segare,ar)
+}
+```
+
+Now execute the multiple comparisons for segment data:
+
+```{r}
+# ensure "segments" is a factor
+#gz.meas$segments <- as.factor(gz.meas$segments)
+
+#LENGTH
+seglen.model <- aov(size ~ stage, data=gz.meas.seglen)
+#TukeyHSD(seglen.model)
+
+#WIDTH
+segwid.model <- aov(size ~ stage, data=gz.meas.segwid)
+#TukeyHSD(segwid.model)
+
+#AREA
+segare.model <- aov(size ~ stage, data=gz.meas.segare)
+#TukeyHSD(segare.model)
+```
+
+
+## Multiple testing part 2
+OK so this is not productive. So many comparisons are suddenly not significant, but they are clearly different, in the right direction, etc etc. The problem is, I think, as described before: many of these comparisons actually were not (nor should be) made, so they are unnecessarily cluttering up the p-values.
+
+Luckily, there are easier methods! Like simply running a string of p-values through a Bonferroni or Holm correction. Let's do this:
+
+```{r multiple testing correction}
+# p-values for all comparisons done before: in the database gz.pvals.
+# they need to be put in a list though.
+
+# segment width 1-2
+pval.list <- gz.pvals$segment_width1_pval
+cat.list <- paste("stage",(1:8),rep("seg_wid1-2",8),sep="_")
+# segment width 2-3
+pval.list <- c(pval.list,na.omit(gz.pvals$segment_width2_pval))
+cat.list <- c(cat.list,paste("stage",(2:8),rep("seg_wid2-3",7),sep="_"))
+padj.list <- p.adjust(pval.list, method="holm")
+
+uncorrected_pvalues <- pval.list
+holm <- padj.list
+category <- cat.list
+
+gz.pval.segwid <- data.frame(category,uncorrected_pvalues,holm)
+
+# segment length
+pval.list <- na.omit(gz.pvals$segment_length_pval)
+cat.list <- paste("stage",(2:8),rep("seg_len",7),sep="_")
+padj.list <- p.adjust(pval.list, method="holm")
+
+uncorrected_pvalues <- pval.list
+holm <- padj.list
+category <- cat.list
+
+gz.pval.seglen <- data.frame(category,uncorrected_pvalues,holm)
+
+# segment area
+pval.list <- na.omit(gz.pvals$segment_area_pval)
+cat.list <- paste("stage",(2:8),rep("seg_area",7),sep="_")
+padj.list <- p.adjust(pval.list, method="holm")
+
+uncorrected_pvalues <- pval.list
+holm <- padj.list
+category <- cat.list
+
+gz.pval.segarea <- data.frame(category,uncorrected_pvalues,holm)
+
+# growth zone width
+pval.list <- gz.pvals$growthzone_width_pval
+cat.list <- paste("stage",(1:8),rep("gz_wid",8),sep="_")
+padj.list <- p.adjust(pval.list, method="holm")
+
+uncorrected_pvalues <- pval.list
+holm <- padj.list
+category <- cat.list
+
+gz.pval.gzwid <- data.frame(category,uncorrected_pvalues,holm)
+
+# growth zone length
+pval.list <- gz.pvals$growthzone_length_pval
+cat.list <- paste("stage",(1:8),rep("gz_len",8),sep="_")
+padj.list <- p.adjust(pval.list, method="holm")
+
+uncorrected_pvalues <- pval.list
+holm <- padj.list
+category <- cat.list
+
+gz.pval.gzlen <- data.frame(category,uncorrected_pvalues,holm)
+
+# growth zone area
+pval.list <- gz.pvals$growthzone_area_pval
+cat.list <- paste("stage",(1:8),rep("gz_area",8),sep="_")
+padj.list <- p.adjust(pval.list, method="holm")
+
+uncorrected_pvalues <- pval.list
+holm <- padj.list
+category <- cat.list
+
+gz.pval.gzarea <- data.frame(category,uncorrected_pvalues,holm)
+
+
+## GROWTHZONE
+# width
+knitr::kable(gz.pval.gzwid)
+
+# length
+knitr::kable(gz.pval.gzlen)
+
+# area
+knitr::kable(gz.pval.gzarea)
+
+## SEGMENT
+# width
+knitr::kable(gz.pval.segwid)
+
+# length
+knitr::kable(gz.pval.seglen)
+
+# area
+knitr::kable(gz.pval.segarea)
+
+```
+
+
+
+## Summary of measurement data
+```{r}
+#how many embryos per age group?
+table(gz.meas$age..in.hrs.)
+#how many embryos per stage?
+table(gz.meas$segments)
+#how many embryos in the segmentation dataset?
+table(gz.data$age)
+table(gz.data$stage)
+
+```
+
