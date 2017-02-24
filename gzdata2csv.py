@@ -17,7 +17,7 @@ import csv
 Specify input parameters: input/output folders and files.
 
 '''
-folder = "/home/barbara/Dropbox/shared_work/growthzone"
+folder = "/home/barbara/Dropbox/"
 data = "output.csv"
 outdata = "gzdata"
 
@@ -57,7 +57,10 @@ for line in csvdata:
 		if len(temp) != 3:
 			print "Error: total measurements on photo %s is not 3. Adjust script or measurements; results invalid." %line[0]
 			break
-		td = [int(line[1][:2])+1,int(line[2])] # enter the age bracket and segment number to the dataset
+		devt1 = float(line[1][:2])
+		devt2 = float(line[1][-2:])
+		avg_age = (devt1+devt2)/2
+		td = [line[0],avg_age,int(line[2])] # enter the age bracket and segment number to the dataset
 		for i in range(4,len(temp[0])): #for all measured parameters:
 			try:
 				k = [float(temp[0][i]),float(temp[1][i]),float(temp[2][i])]
@@ -95,7 +98,7 @@ for k in devt_time:
 ## a9/[10]:\tThe area of the growthzone up to the first stripe\n")
 ## a10/[11]:\tThe area of the growthzone between the first and second stripe\n")
 ## a11/[12]:\tThe area of the growthzone between the second and third stripe\n\n")
-mlabels = ['age (in hrs)','segments','growthzone width','stripe 1 width','stripe 2 width', 'stripe 3 width', 'growthzone length', 'growthzone top half length','1st segment length','2nd segment length','growthzone area','1st segment area','2nd segment area']
+mlabels = ['filename','age (in hrs)','segments','growthzone width','stripe 1 width','stripe 2 width', 'stripe 3 width', 'growthzone length', 'growthzone top half length','1st segment length','2nd segment length','growthzone area','1st segment area','2nd segment area','gz+1st_segment']
 
 
 '''
