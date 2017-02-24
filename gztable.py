@@ -1,7 +1,7 @@
 import os
 import numpy as np
 
-folder = "/home/barbara/Dropbox/shared_work/growthzone/"
+folder = "/home/barbara/Dropbox/"
 msfile = "temp/"
 outputdb = open("%soutput.csv" %(folder),"w")
 out_tt = open("%stidy_measurements-bystage.csv" %(folder),"w")
@@ -58,7 +58,11 @@ collect_meas = [[[] for x in range(9)] for m in name_meas]
 mean_meas = [['' for x in range(9)] for m in name_meas]
 var_meas = [['' for x in range(9)] for m in name_meas]
 
-ages = ['44-46','46-48','48-50','50-52','52-54','54-56']
+#ages = ['44-46','46-48','48-50','50-52','52-54','54-56']
+ages = []
+for i in range(44,56):
+	a = '%s-%s' %(str(i),str(i+1))
+	ages.append(a)
 name_meas_a = name_meas + ['stage']
 collect_meas_a = [[[] for x in range(len(ages))] for m in name_meas_a]
 mean_meas_a = [['' for x in range(len(ages))] for m in name_meas_a]
@@ -89,24 +93,26 @@ for img in filelist:
 				break
 
 		outputdb.write("%s.%s,%s,%s,%s," %(img,jpgdict[img],age,segm,i))# collect image filename to measurement number
-		w1 = float(length[1].split()[8])*cr #8th item depends on formatting imagej! pay attention!
+		#print length[1].split()
+		#continue
+		w1 = float(length[1].split()[6])*cr #6th or 8th item depends on formatting imagej! pay attention!
 		if segm >= 0:
 			w2=w3=w4=l5=l7=l8=a1=a2=a3=a4="" #a4 is added, it's the total of gz area and 1st segment area
-			l6 = float(length[2].split()[8])*cr
+			l6 = float(length[2].split()[6])*cr
 		if segm >= 1:
-			w2=float(length[2].split()[8])*cr
-			l5=float(length[3].split()[8])*cr
-			a1=float(area[1].split()[2])*(cr*cr)
+			w2=float(length[2].split()[6])*cr
+			l5=float(length[3].split()[6])*cr
+			a1=float(area[1].split()[1])*(cr*cr)
 		if segm >= 2:
-			w3=float(length[3].split()[8])*cr
-			l6=float(length[5].split()[8])*cr
-			l7=float(length[6].split()[8])*cr
-			a2=float(area[2].split()[2])*(cr*cr)
+			w3=float(length[3].split()[6])*cr
+			l6=float(length[5].split()[6])*cr
+			l7=float(length[6].split()[6])*cr
+			a2=float(area[2].split()[1])*(cr*cr)
 			a4=a1+a2
 		if segm >= 3:
-			w4=float(length[4].split()[8])*cr
-			l8=float(length[8].split()[8])*cr
-			a3=float(area[3].split()[2])*(cr*cr)
+			w4=float(length[4].split()[6])*cr
+			l8=float(length[8].split()[6])*cr
+			a3=float(area[3].split()[1])*(cr*cr)
 		outputdb.write("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" %(w1,w2,w3,w4,l5,l6,l7,l8,a1,a2,a3,a4))
 		for k,measurement in enumerate((w1,w2,w3,w4,l5,l6,l7,l8,a1,a2,a3,a4)):#iterate through measurements and add them to the list
 			if measurement == "": #empty measurement, don't add it
