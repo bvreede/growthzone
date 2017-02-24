@@ -1,7 +1,7 @@
 import csv
 
-cr=csv.reader(open("/home/barbara/Dropbox/oncopeltus/playground/gzdata.csv"))
-out = open("/home/barbara/Dropbox/shared_work/growthzone/pandasdata-onlygz.csv", "w")
+cr=csv.reader(open("/home/barbara/Dropbox/gzdata.csv"))
+out = open("/home/barbara/Dropbox/pandasdata.csv", "w")
 
 #write headers to outfile
 out.write("Stage,Item,Width,Length,Area\n")
@@ -32,19 +32,20 @@ def writeinfo(seg,itID,w,l,a):
 stripeID = {'11': 'A', '12': 'B', '13':'C', '14':'D', '15':'E', '16': 'F', '17':'G', '18':'H', '19':'I', '22': 'A', '23': 'B', '24':'C', '25':'D', '26':'E', '27': 'F', '28':'G', '29':'H', '33': 'A', '34': 'B', '35':'C', '36':'D', '37':'E', '38': 'F', '39':'G'}
 
 ####### Original:
-#0	'age (in hrs)'
-#1	'segments'
-#2	'growthzone width'
-#3	'stripe 1 width'
-#4	'stripe 2 width'
-#5	'stripe 3 width'
-#6	'growthzone length
-#7	'growthzone top half length'
-#8	'1st segment length'
-#9	'2nd segment length'
-#10	'growthzone area'
-#11	'1st segment area'
-#12	'2nd segment area'
+#0	'filename'
+#1	'age (in hrs)'
+#2	'segments'
+#3	'growthzone width'
+#4	'stripe 1 width'
+#5	'stripe 2 width'
+#6	'stripe 3 width'
+#7	'growthzone length
+#8	'growthzone top half length'
+#9	'1st segment length'
+#10	'2nd segment length'
+#11	'growthzone area'
+#12	'1st segment area'
+#13	'2nd segment area'
 
 ####### Goal:
 #1	'segments'
@@ -54,29 +55,28 @@ stripeID = {'11': 'A', '12': 'B', '13':'C', '14':'D', '15':'E', '16': 'F', '17':
 #5	'area'
 
 for line in cr:
-	if line[0][:3] == "age": #first line, headers
+	if line[0][:3] == "fil": #first line, headers
 		continue
-	seg = line[1]
+	seg = line[2]
 	# first assess gz
 	itID = 'gz'
-	w = line[2]
-	l = line[6]
-	a = line[10]
+	w = line[3]
+	l = line[7]
+	a = line[11]
 	writeinfo(seg,itID,w,l,a) # write info to file
-	continue
 	# then assess first seg
 	itID = stripeID['1' + seg]
-	w = line[3]
-	l = line[8]
-	a = line[11]
+	w = line[4]
+	l = line[9]
+	a = line[12]
 	writeinfo(seg,itID,w,l,a)# write info to file
 	if int(seg) < 2:
 		continue
 	# then assess second seg
 	itID = stripeID['2' + seg]
-	w = line[4]
-	l = line[9]
-	a = line[12]
+	w = line[5]
+	l = line[10]
+	a = line[13]
 	writeinfo(seg,itID,w,l,a)# write info to file
 	if int(seg) < 3:
 		continue
