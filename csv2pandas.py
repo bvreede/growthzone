@@ -1,6 +1,6 @@
 import csv
 
-cr=csv.reader(open("/home/barbara/Dropbox/gzdata.csv"))
+cr=csv.reader(open("/home/barbara/Dropbox/supplementary1b.csv"))
 out = open("/home/barbara/Dropbox/pandasdata.csv", "w")
 
 #write headers to outfile
@@ -55,7 +55,7 @@ stripeID = {'11': 'A', '12': 'B', '13':'C', '14':'D', '15':'E', '16': 'F', '17':
 #5	'area'
 
 for line in cr:
-	if line[0][:3] == "fil": #first line, headers
+	if 'filename' in line:# line[0][:3] == "fil": #first line, headers
 		continue
 	seg = line[2]
 	# first assess gz
@@ -82,7 +82,7 @@ for line in cr:
 		continue
 	# then assess third seg
 	itID = stripeID['3' + seg]
-	w = line[5]
+	w = line[6]
 	l = "NaN"
 	a = "NaN"
 	writeinfo(seg,itID,w,l,a)# write info to file
