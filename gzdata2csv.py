@@ -18,8 +18,8 @@ Specify input parameters: input/output folders and files.
 
 '''
 folder = "/home/barbara/Dropbox/"
-data = "output.csv"
-outdata = "gzdata"
+data = "output2.csv"
+outdata = "gzdata2"
 
 '''
 Read input file and import the data to memory.
